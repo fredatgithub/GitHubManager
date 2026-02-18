@@ -16,6 +16,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
@@ -54,6 +55,23 @@
                                    VerticalAlignment="Center"
                                    TextWrapping="Wrap" />
                     </StackPanel>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0"
+                               Margin="0,0,10,10"
+                               VerticalAlignment="Center"
+                               Text="Chemin local des repos :" />
+                    <StackPanel Grid.Row="3" Grid.Column="1"
+                                Orientation="Horizontal"
+                                Margin="0,0,0,10">
+                        <TextBox x:Name="LocalReposPathTextBox"
+                                 MinWidth="200"
+                                 VerticalAlignment="Center"
+                                 Margin="0,0,5,0" />
+                        <Button x:Name="BrowseFolderButton"
+                                Content="Parcourir..."
+                                Width="100"
+                                Click="BrowseFolderButton_Click" />
+                    </StackPanel>
                 </Grid>
             </TabItem>
 
@@ -63,6 +81,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <StackPanel Grid.Row="0"
@@ -83,10 +102,21 @@
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
                               CanUserAddRows="False"
-                              Margin="0"
+                              Margin="0,0,0,10"
                               HeadersVisibility="Column"
                               SelectionMode="Single">
                         <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Action" Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Cloner/Mettre à jour"
+                                                Click="CloneOrUpdateButton_Click"
+                                                Tag="{Binding}"
+                                                Padding="5,2"
+                                                Margin="2" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Nom"
                                                 Binding="{Binding Name}"
                                                 Width="2*" />
@@ -101,6 +131,66 @@
                                                 Width="3*" />
                         </DataGrid.Columns>
                     </DataGrid>
+
+                    <!-- Barre de pagination -->
+                    <Border Grid.Row="2"
+                            BorderBrush="LightGray"
+                            BorderThickness="0,1,0,0"
+                            Padding="5">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                <Button x:Name="FirstPageButton"
+                                        Content="⏮ Première"
+                                        Width="100"
+                                        Margin="0,0,5,0"
+                                        Click="FirstPageButton_Click"
+                                        IsEnabled="False" />
+                                <Button x:Name="PreviousPageButton"
+                                        Content="◀ Précédente"
+                                        Width="100"
+                                        Margin="0,0,5,0"
+                                        Click="PreviousPageButton_Click"
+                                        IsEnabled="False" />
+                                <TextBlock x:Name="PaginationInfoTextBlock"
+                                           VerticalAlignment="Center"
+                                           Margin="10,0,10,0"
+                                           Text="Page 1 sur 1 (0 dépôts)"
+                                           FontWeight="SemiBold" />
+                                <Button x:Name="NextPageButton"
+                                        Content="Suivante ▶"
+                                        Width="100"
+                                        Margin="5,0,5,0"
+                                        Click="NextPageButton_Click"
+                                        IsEnabled="False" />
+                                <Button x:Name="LastPageButton"
+                                        Content="Dernière ⏭"
+                                        Width="100"
+                                        Margin="5,0,0,0"
+                                        Click="LastPageButton_Click"
+                                        IsEnabled="False" />
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        Margin="10,0,0,0">
+                                <TextBlock Text="Dépôts par page :"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,5,0" />
+                                <ComboBox x:Name="ItemsPerPageComboBox"
+                                          Width="80"
+                                          SelectionChanged="ItemsPerPageComboBox_SelectionChanged" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
                 </Grid>
             </TabItem>
         </TabControl>
