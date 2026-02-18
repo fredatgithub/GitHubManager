@@ -75,18 +75,20 @@ namespace GitHubManager
 
     private void LogMessage(string message)
     {
+        string timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+        string logMessage = $"[{timestamp}] {message}";
+        
         if (LogTextBox != null)
         {
             Dispatcher.Invoke(() =>
             {
-                string timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
-                LogTextBox.AppendText($"[{timestamp}] {message}{Environment.NewLine}");
+                LogTextBox.AppendText($"{logMessage}{Environment.NewLine}");
                 LogTextBox.ScrollToEnd();
             });
         }
         
-        // Toujours écrire dans la sortie de débogage
-        //Debug.WriteLine(message);
+        // Écrire dans le fichier de log
+        AppPreferencesStorage.LogToFile(message);
     }
 
     private bool _hasStoredCredentials = false;
@@ -97,6 +99,11 @@ namespace GitHubManager
     {
       InitializeComponent();
       RepositoriesDataGrid.ItemsSource = _repositories;
+      
+      // Enregistrer le démarrage de l'application
+      string startupMessage = $"=== Démarrage de l'application à {DateTime.Now:dd/MM/yyyy HH:mm:ss} ===";
+      LogInfo(startupMessage);
+      
       LoadStoredCredentials();
       LoadStoredPreferences();
 

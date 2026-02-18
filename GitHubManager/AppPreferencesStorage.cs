@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace GitHubManager
@@ -14,6 +15,15 @@ namespace GitHubManager
       Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
       "GitHubManager",
       "showmessages.config");
+      
+    private static readonly string LogDirectory = Path.Combine(
+      Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+      "GitHubManager",
+      "Logs");
+      
+    private static readonly string LogFilePath = Path.Combine(
+      LogDirectory,
+      $"locallog_{DateTime.Now:yyyyMMdd}.txt");
 
     private const int DefaultItemsPerPage = 20;
     private const bool DefaultShowMessages = true;
@@ -101,6 +111,38 @@ namespace GitHubManager
       catch
       {
         return DefaultShowMessages;
+      }
+    }
+    
+    public static void LogToFile(string message)
+    {
+      try
+      {
+        // Créer le répertoire s'il n'existe pas
+        if (!Directory.Exists(LogDirectory))
+        {
+          Directory.CreateDirectory(LogDirectory);
+        }
+        
+        // Ajouter le message au fichier de log avec un timestamp
+        File.AppendAllText(LogFilePath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {message}{Environment.NewLine}");
+      }
+      catch (Exception ex)
+      {
+        // En cas d'erreur, écrire dans le journal des événements Windows
+        try
+        {
+          using (EventLog eventLog = new EventLog("Application"))
+          {
+            eventLog.Source = "GitHubManager";
+            eventLog.WriteEntry($"Erreur lors de l'écriture dans le fichier de log: {ex.Message}", 
+                              EventLogEntryType.Error);
+          }
+        }
+        catch
+        {
+          // Si tout échoue, on ne peut rien faire de plus
+        }
       }
     }
 
