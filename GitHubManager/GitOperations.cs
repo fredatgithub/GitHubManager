@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -109,7 +108,7 @@ namespace GitHubManager
     {
       Debug.WriteLine($"\n[CheckRepositoryState] Début de la vérification pour le dépôt: {repoName}");
       Debug.WriteLine($"[CheckRepositoryState] Chemin local fourni: {localPath}");
-      
+
       try
       {
         if (string.IsNullOrEmpty(localPath))
@@ -178,15 +177,19 @@ namespace GitHubManager
           var output = new System.Text.StringBuilder();
           var error = new System.Text.StringBuilder();
 
-          fetchProcess.OutputDataReceived += (s, e) => {
-            if (!string.IsNullOrEmpty(e.Data)) {
+          fetchProcess.OutputDataReceived += (s, e) =>
+          {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
               output.AppendLine(e.Data);
               Debug.WriteLine($"[Git fetch] {e.Data}");
             }
           };
-          
-          fetchProcess.ErrorDataReceived += (s, e) => {
-            if (!string.IsNullOrEmpty(e.Data)) {
+
+          fetchProcess.ErrorDataReceived += (s, e) =>
+          {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
               error.AppendLine(e.Data);
               Debug.WriteLine($"[Git fetch ERROR] {e.Data}");
             }
@@ -212,23 +215,23 @@ namespace GitHubManager
 
           var exitCode = fetchProcess.ExitCode;
           var fetchOutput = output.ToString() + error.ToString();
-          
+
           Debug.WriteLine($"[CheckRepositoryState] Code de sortie git fetch: {exitCode}");
           Debug.WriteLine($"[CheckRepositoryState] Sortie complète de 'git fetch --dry-run':\n{fetchOutput}");
-          
+
           if (exitCode != 0)
           {
             Debug.WriteLine($"[CheckRepositoryState] Erreur lors de l'exécution de git fetch. Code: {exitCode}");
             return (RepositoryLocalState.NeedsUpdate, repoPath);
           }
-          
+
           // Si fetch --dry-run indique "Already up to date" ou est vide, vérifier avec status
-          if (string.IsNullOrWhiteSpace(fetchOutput) || 
+          if (string.IsNullOrWhiteSpace(fetchOutput) ||
               fetchOutput.Contains("Already up to date") ||
               fetchOutput.Contains("Tout est à jour"))
           {
             Debug.WriteLine("[CheckRepositoryState] Aucun changement distant détecté, vérification de l'état local");
-            
+
             // Vérifier l'état du dépôt local
             Debug.WriteLine("[CheckRepositoryState] Vérification de l'état local avec 'git status -sb'");
             var statusInfo = new ProcessStartInfo
@@ -253,7 +256,7 @@ namespace GitHubManager
               var statusOutput = statusProcess.StandardOutput.ReadToEnd();
 
               Debug.WriteLine($"[CheckRepositoryState] Sortie de 'git status -sb': {statusOutput}");
-              
+
               // Si le status montre "ahead" ou "behind", le repo n'est pas à jour
               if (statusOutput.Contains("ahead") || statusOutput.Contains("behind"))
               {

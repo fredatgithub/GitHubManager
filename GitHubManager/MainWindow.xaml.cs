@@ -5,9 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -28,67 +26,67 @@ namespace GitHubManager
     private int _itemsPerPage = 20;
     private int _currentPage = 1;
     private int _totalPages = 1;
-    
+
     // Propriété pour contrôler l'affichage des messages
     private bool ShowMessages => ShowMessagesCheckBox?.IsChecked ?? true;
 
     // Méthode utilitaire pour afficher des messages de manière conditionnelle
     private void ShowMessage(string message, string title, MessageBoxButton buttons = MessageBoxButton.OK, MessageBoxImage icon = MessageBoxImage.None)
     {
-        // Journaliser le message avec le niveau approprié
-        string logMessage = $"{title}: {message}";
-        if (icon == MessageBoxImage.Error)
-        {
-            LogError(logMessage);
-        }
-        else if (icon == MessageBoxImage.Warning)
-        {
-            LogWarning(logMessage);
-        }
-        else
-        {
-            LogInfo(logMessage);
-        }
+      // Journaliser le message avec le niveau approprié
+      string logMessage = $"{title}: {message}";
+      if (icon == MessageBoxImage.Error)
+      {
+        LogError(logMessage);
+      }
+      else if (icon == MessageBoxImage.Warning)
+      {
+        LogWarning(logMessage);
+      }
+      else
+      {
+        LogInfo(logMessage);
+      }
 
-        // Afficher la boîte de message si activé
-        if (ShowMessages)
-        {
-            Dispatcher.Invoke(() => MessageBox.Show(this, message, title, buttons, icon));
-        }
+      // Afficher la boîte de message si activé
+      if (ShowMessages)
+      {
+        Dispatcher.Invoke(() => MessageBox.Show(this, message, title, buttons, icon));
+      }
     }
 
     // Méthodes de journalisation
     private void LogInfo(string message)
     {
-        LogMessage($"[INFO] {message}");
+      LogMessage($"[INFO] {message}");
     }
 
     private void LogWarning(string message)
     {
-        LogMessage($"[WARNING] {message}");
+      LogMessage($"[WARNING] {message}");
     }
 
     private void LogError(string message)
     {
-        LogMessage($"[ERROR] {message}");
+      LogMessage($"[ERROR] {message}");
     }
 
     private void LogMessage(string message)
     {
-        string timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
-        string logMessage = $"[{timestamp}] {message}";
-        
-        if (LogTextBox != null)
+      string timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+      string logMessage = $"[{timestamp}] {message}";
+
+      if (LogTextBox != null)
+      {
+        Dispatcher.Invoke(() =>
         {
-            Dispatcher.Invoke(() =>
-            {
-                LogTextBox.AppendText($"{logMessage}{Environment.NewLine}");
-                LogTextBox.ScrollToEnd();
-            });
-        }
-        
-        // Écrire dans le fichier de log
-        AppPreferencesStorage.LogToFile(message);
+          LogTextBox.AppendText($"{logMessage}{Environment.NewLine}");
+          LogTextBox.ScrollToEnd();
+        });
+      }
+
+      // Écrire dans le fichier de log
+      AppPreferencesStorage.LogToFile(message);
     }
 
     private bool _hasStoredCredentials = false;
@@ -99,17 +97,17 @@ namespace GitHubManager
     {
       InitializeComponent();
       RepositoriesDataGrid.ItemsSource = _repositories;
-      
+
       // Enregistrer le démarrage de l'application
       string startupMessage = $"=== Démarrage de l'application à {DateTime.Now:dd/MM/yyyy HH:mm:ss} ===";
       LogInfo(startupMessage);
-      
+
       LoadStoredCredentials();
       LoadStoredPreferences();
 
       Loaded += MainWindow_Loaded;
       Closing += MainWindow_Closing;
-      
+
       // Initialiser l'UI de pagination après le chargement des composants
       Loaded += (s, e) =>
       {
@@ -122,7 +120,7 @@ namespace GitHubManager
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
       WindowSettingsStorage.Load(this);
-      
+
       // Tester automatiquement l'authentification si les identifiants sont présents
       if (_hasStoredCredentials)
       {
@@ -136,10 +134,10 @@ namespace GitHubManager
       {
         // Sauvegarder les paramètres de la fenêtre
         WindowSettingsStorage.Save(this);
-        
+
         // Sauvegarder les préférences
         SaveStoredPreferences();
-        
+
         // Sauvegarder les logs dans un fichier
         if (LogTextBox != null)
         {
@@ -152,32 +150,32 @@ namespace GitHubManager
               "GitHubManager",
               "Logs",
               logFileName);
-              
+
             string logDir = Path.GetDirectoryName(logFilePath);
             if (!Directory.Exists(logDir))
             {
               Directory.CreateDirectory(logDir);
             }
-            
+
             File.WriteAllText(logFilePath, logContent);
             LogInfo($"Journal de l'application sauvegardé dans: {logFilePath}");
           }
         }
-        
+
         LogInfo("Application fermée");
       }
-      catch (Exception ex)
+      catch (Exception exception)
       {
-        LogError($"Erreur lors de la fermeture de l'application: {ex.Message}");
-        
+        LogError($"Erreur lors de la fermeture de l'application: {exception.Message}");
+
         // Essayer d'écrire l'erreur dans un fichier de secours
         try
         {
           string errorLogPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
             $"GitHubManager_Error_{DateTime.Now:yyyyMMdd-HHmmss}.txt");
-            
-          File.WriteAllText(errorLogPath, $"Erreur lors de la fermeture de l'application:\n{ex}");
+
+          File.WriteAllText(errorLogPath, $"Erreur lors de la fermeture de l'application:\n{exception}");
         }
         catch { /* Ignorer les erreurs de sauvegarde du fichier d'erreur */ }
       }
@@ -267,7 +265,7 @@ namespace GitHubManager
               var login = serializer.ReadObject(stream) is GitHubUser user ? user.Login : "(inconnu)";
               AuthStatusTextBlock.Text = $"Authentification réussie. Connecté en tant que {login}.";
               AuthStatusTextBlock.Foreground = Brushes.Green;
-              
+
               // Colorer le bouton en vert
               TestAuthButton.Background = Brushes.Green;
 
@@ -276,7 +274,7 @@ namespace GitHubManager
               // Basculer vers l'onglet Dépôts
               if (MainTabControl != null && ReposTabItem != null)
               {
-                  MainTabControl.SelectedItem = ReposTabItem;
+                MainTabControl.SelectedItem = ReposTabItem;
               }
             }
           }
@@ -288,9 +286,9 @@ namespace GitHubManager
           }
         }
       }
-      catch (Exception ex)
+      catch (Exception exception)
       {
-        AuthStatusTextBlock.Text = $"Erreur lors du test : {ex.Message}";
+        AuthStatusTextBlock.Text = $"Erreur lors du test : {exception.Message}";
         AuthStatusTextBlock.Foreground = Brushes.Red;
         TestAuthButton.Background = Brushes.Red;
       }
@@ -349,7 +347,7 @@ namespace GitHubManager
         {
           // Charger les dépôts en paginant
           var allRepos = await LoadAllRepositoriesAsync(client, cancellationToken, maxRepos, loadingWindow);
-          
+
           if (!cancellationToken.IsCancellationRequested)
           {
             loadingWindow?.UpdateStatus("Ajout des dépôts à la liste...");
@@ -378,9 +376,9 @@ namespace GitHubManager
       {
         ReposStatusTextBlock.Text = "Chargement annulé.";
       }
-      catch (Exception ex)
+      catch (Exception exception)
       {
-        ReposStatusTextBlock.Text = $"Erreur lors du chargement : {ex.Message}";
+        ReposStatusTextBlock.Text = $"Erreur lors du chargement : {exception.Message}";
       }
       finally
       {
@@ -476,36 +474,36 @@ namespace GitHubManager
     private void LoadStoredPreferences()
     {
       _itemsPerPage = AppPreferencesStorage.LoadItemsPerPage();
-      
+
       var localPath = AppPreferencesStorage.LoadLocalReposPath();
       if (!string.IsNullOrWhiteSpace(localPath) && LocalReposPathTextBox != null)
       {
         LocalReposPathTextBox.Text = localPath;
       }
-      
+
       // Charger l'état de la case à cocher ShowMessages
       if (ShowMessagesCheckBox != null)
       {
         ShowMessagesCheckBox.IsChecked = AppPreferencesStorage.LoadShowMessages();
       }
-      
+
       // Le chargement de MaxRepos se fait dans InitializeMaxReposComboBox()
     }
 
     private void SaveStoredPreferences()
     {
       AppPreferencesStorage.SaveItemsPerPage(_itemsPerPage);
-      
+
       if (LocalReposPathTextBox != null)
       {
         AppPreferencesStorage.SaveLocalReposPath(LocalReposPathTextBox.Text);
       }
-      
+
       if (MaxReposComboBox != null && MaxReposComboBox.SelectedItem != null)
       {
         AppPreferencesStorage.SaveMaxRepos(MaxReposComboBox.SelectedItem);
       }
-      
+
       if (ShowMessagesCheckBox != null)
       {
         AppPreferencesStorage.SaveShowMessages(ShowMessagesCheckBox.IsChecked ?? true);
@@ -526,11 +524,11 @@ namespace GitHubManager
       if (MaxReposComboBox != null)
       {
         MaxReposComboBox.ItemsSource = new object[] { "Tous", 50, 100, 200, 500 };
-        
+
         // Charger la valeur sauvegardée
         var savedValue = AppPreferencesStorage.LoadMaxRepos();
         MaxReposComboBox.SelectedItem = savedValue;
-        
+
         // Ajouter le gestionnaire d'événement pour sauvegarder lors du changement
         MaxReposComboBox.SelectionChanged += MaxReposComboBox_SelectionChanged;
       }
@@ -549,7 +547,7 @@ namespace GitHubManager
       if (_loadCancellationTokenSource != null && !_loadCancellationTokenSource.IsCancellationRequested)
       {
         _loadCancellationTokenSource.Cancel();
-        
+
         // Fermer la fenêtre de chargement si elle est ouverte
         if (_currentLoadingWindow != null)
         {
@@ -562,7 +560,7 @@ namespace GitHubManager
     private async Task CheckRepositoriesLocalStateAsync()
     {
       var localPath = LocalReposPathTextBox?.Text?.Trim();
-      
+
       if (string.IsNullOrWhiteSpace(localPath))
       {
         LogInfo("Aucun chemin local spécifié, marquage de tous les dépôts comme non clonés");
@@ -586,11 +584,11 @@ namespace GitHubManager
           int processed = 0;
           foreach (var repo in _allRepositories)
           {
-            try 
+            try
             {
               LogInfo($"Vérification du dépôt: {repo.Name}");
               var (state, repoPath) = GitOperations.CheckRepositoryState(repo.Name, localPath);
-              
+
               // Mettre à jour sur le thread UI
               Dispatcher.Invoke(() =>
               {
@@ -599,16 +597,16 @@ namespace GitHubManager
                 LogInfo($"État du dépôt {repo.Name}: {state}, Chemin: {repoPath}");
               });
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-              LogError($"Erreur lors de la vérification du dépôt {repo.Name}: {ex.Message}");
+              LogError($"Erreur lors de la vérification du dépôt {repo.Name}: {exception.Message}");
               Dispatcher.Invoke(() =>
               {
                 repo.LocalState = RepositoryLocalState.NotCloned;
                 repo.LocalPath = string.Empty;
               });
             }
-            
+
             processed++;
             if (processed % 10 == 0) // Tous les 10 dépôts
             {
@@ -619,9 +617,9 @@ namespace GitHubManager
 
         LogInfo("Vérification des dépôts terminée");
       }
-      catch (Exception ex)
+      catch (Exception exception)
       {
-        LogError($"Erreur lors de la vérification des dépôts: {ex}");
+        LogError($"Erreur lors de la vérification des dépôts: {exception}");
       }
 
       // Rafraîchir l'affichage de la pagination pour mettre à jour les couleurs
@@ -657,7 +655,7 @@ namespace GitHubManager
 
         var statusMessage = $"Chargement des dépôts... (page {page}, {allRepos.Count} déjà chargés)";
         ReposStatusTextBlock.Text = statusMessage;
-        
+
         loadingWindow?.Dispatcher.Invoke(() =>
           {
             loadingWindow.UpdateStatus(statusMessage);
@@ -695,7 +693,7 @@ namespace GitHubManager
               {
                 allRepos.AddRange(repos);
               }
-              
+
               // Vérifier s'il y a une page suivante via l'en-tête Link
               if (response.Headers.Contains("Link"))
               {
@@ -733,14 +731,14 @@ namespace GitHubManager
       // On cherche la présence de rel="next"
       return linkHeader.Contains("rel=\"next\"");
     }
-    
+
     private void ClearLogButton_Click(object sender, RoutedEventArgs e)
     {
-        if (LogTextBox != null)
-        {
-            LogTextBox.Clear();
-            LogInfo("Journal effacé");
-        }
+      if (LogTextBox != null)
+      {
+        LogTextBox.Clear();
+        LogInfo("Journal effacé");
+      }
     }
 
     private async void CloneButton_Click(object sender, RoutedEventArgs e)
@@ -748,7 +746,7 @@ namespace GitHubManager
       if (sender is System.Windows.Controls.Button button && button.Tag is GitHubRepository repo)
       {
         var localPath = LocalReposPathTextBox?.Text?.Trim();
-        
+
         if (string.IsNullOrWhiteSpace(localPath))
         {
           ShowMessage(
@@ -771,7 +769,7 @@ namespace GitHubManager
           {
             // Mettre à jour l'état du dépôt cloné
             var (state, repoPath) = GitOperations.CheckRepositoryState(repo.Name, localPath);
-            
+
             // Mettre à jour les propriétés sur le thread UI
             Dispatcher.Invoke(() =>
             {
@@ -797,10 +795,10 @@ namespace GitHubManager
               MessageBoxImage.Error);
           }
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
           ShowMessage(
-            $"Erreur lors du clonage : {ex.Message}",
+            $"Erreur lors du clonage : {exception.Message}",
             "Erreur",
             MessageBoxButton.OK,
             MessageBoxImage.Error);
@@ -818,7 +816,7 @@ namespace GitHubManager
       if (sender is System.Windows.Controls.Button button && button.Tag is GitHubRepository repo)
       {
         var localPath = LocalReposPathTextBox?.Text?.Trim();
-        
+
         if (string.IsNullOrWhiteSpace(localPath))
         {
           ShowMessage(
@@ -842,7 +840,7 @@ namespace GitHubManager
           {
             // Mettre à jour l'état du dépôt mis à jour
             var (state, updatedRepoPath) = GitOperations.CheckRepositoryState(repo.Name, localPath);
-            
+
             // Mettre à jour les propriétés sur le thread UI
             Dispatcher.Invoke(() =>
             {
@@ -869,7 +867,7 @@ namespace GitHubManager
               repo.LocalPath = currentRepoPath;
             });
             CommandManager.InvalidateRequerySuggested();
-            
+
             ShowMessage(
               $"Erreur lors de la mise à jour du dépôt '{repo.Name}'.",
               "Erreur",
@@ -877,10 +875,10 @@ namespace GitHubManager
               MessageBoxImage.Error);
           }
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
           ShowMessage(
-            $"Erreur lors de la mise à jour : {ex.Message}",
+            $"Erreur lors de la mise à jour : {exception.Message}",
             "Erreur",
             MessageBoxButton.OK,
             MessageBoxImage.Error);

@@ -1,7 +1,6 @@
-using System.Runtime.Serialization;
-using System.Windows.Media;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 
 namespace GitHubManager
 {
@@ -23,7 +22,7 @@ namespace GitHubManager
     public string HtmlUrl { get; set; }
 
     private string _localPath;
-    
+
     // Propriété pour le chemin local du dépôt
     public string LocalPath
     {

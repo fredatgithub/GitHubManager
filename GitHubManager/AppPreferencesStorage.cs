@@ -129,7 +129,7 @@ namespace GitHubManager
         // Ajouter le message au fichier de log avec un timestamp
         File.AppendAllText(logFilePath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {message}{Environment.NewLine}");
       }
-      catch (Exception ex)
+      catch (Exception exception)
       {
         // En cas d'erreur, écrire dans le journal des événements Windows
         try
@@ -137,7 +137,7 @@ namespace GitHubManager
           using (EventLog eventLog = new EventLog("Application"))
           {
             eventLog.Source = "GitHubManager";
-            eventLog.WriteEntry($"Erreur lors de l'écriture dans le fichier de log: {ex.Message}", 
+            eventLog.WriteEntry($"Erreur lors de l'écriture dans le fichier de log: {exception.Message}", 
                               EventLogEntryType.Error);
           }
         }
