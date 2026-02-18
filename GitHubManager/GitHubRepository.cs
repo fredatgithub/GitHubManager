@@ -22,8 +22,21 @@ namespace GitHubManager
     [DataMember(Name = "html_url")]
     public string HtmlUrl { get; set; }
 
+    private string _localPath;
+    
     // Propriété pour le chemin local du dépôt
-    public string LocalPath { get; set; }
+    public string LocalPath
+    {
+      get => _localPath;
+      set
+      {
+        if (_localPath != value)
+        {
+          _localPath = value;
+          OnPropertyChanged();
+        }
+      }
+    }
 
     // Propriété non-sérialisée pour l'état local
     public RepositoryLocalState LocalState

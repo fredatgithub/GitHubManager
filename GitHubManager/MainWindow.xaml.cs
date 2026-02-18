@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Http;
+using System.Windows.Input;
 using System.Net.Http.Headers;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
@@ -609,9 +610,16 @@ namespace GitHubManager
             // Mettre à jour l'état local du dépôt et le chemin
             if (!string.IsNullOrWhiteSpace(localPath))
             {
+              // Rafraîchir l'état de tous les dépôts pour s'assurer que tout est à jour
+              await CheckRepositoriesLocalStateAsync();
+              
+              // Mettre à jour le dépôt actuel
               var (state, path) = GitOperations.CheckRepositoryState(repo.Name, localPath);
               repo.LocalState = state;
               repo.LocalPath = path;
+              
+              // Forcer la mise à jour de l'interface utilisateur
+              CommandManager.InvalidateRequerySuggested();
             }
 
             MessageBox.Show(

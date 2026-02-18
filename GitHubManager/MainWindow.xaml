@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GitHubManager"
+        xmlns:enums="clr-namespace:GitHubManager"
         mc:Ignorable="d"
         Title="GitHub Manager" Height="450" Width="900"
         WindowStartupLocation="CenterScreen">
@@ -130,13 +131,13 @@
                                                 <Style TargetType="Button">
                                                     <Setter Property="Background" Value="Transparent" />
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding LocalState}" Value="UpToDate">
+                                                        <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.UpToDate}">
                                                             <Setter Property="Background" Value="Green" />
                                                         </DataTrigger>
-                                                        <DataTrigger Binding="{Binding LocalState}" Value="NeedsUpdate">
+                                                        <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NeedsUpdate}">
                                                             <Setter Property="Background" Value="Red" />
                                                         </DataTrigger>
-                                                        <DataTrigger Binding="{Binding LocalState}" Value="NotCloned">
+                                                        <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NotCloned}">
                                                             <Setter Property="Background" Value="Red" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
