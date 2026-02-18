@@ -151,6 +151,12 @@ namespace GitHubManager
               TestAuthButton.Background = Brushes.Green;
 
               CredentialStorage.Save(userName, _token);
+
+              // Basculer vers l'onglet Dépôts
+              if (MainTabControl != null && ReposTabItem != null)
+              {
+                  MainTabControl.SelectedItem = ReposTabItem;
+              }
             }
           }
           else

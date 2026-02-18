@@ -8,7 +8,7 @@
         Title="GitHub Manager" Height="450" Width="900"
         WindowStartupLocation="CenterScreen">
     <Grid Margin="10">
-        <TabControl>
+        <TabControl x:Name="MainTabControl">
             <!-- Onglet authentification -->
             <TabItem Header="Authentification">
                 <Grid Margin="10">
@@ -76,7 +76,7 @@
             </TabItem>
 
             <!-- Onglet dépôts -->
-            <TabItem Header="Dépôts" Height="20" VerticalAlignment="Top">
+            <TabItem x:Name="ReposTabItem" Header="Dépôts" Height="20" VerticalAlignment="Top">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
