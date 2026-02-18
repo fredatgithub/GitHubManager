@@ -606,10 +606,17 @@ namespace GitHubManager
 
           if (success)
           {
-            // Rafraîchir l'état de tous les dépôts
-            await CheckRepositoriesLocalStateAsync();
+            // Mettre à jour l'état du dépôt cloné
+            var (state, repoPath) = GitOperations.CheckRepositoryState(repo.Name, localPath);
             
-            // Mettre à jour l'interface utilisateur
+            // Mettre à jour les propriétés sur le thread UI
+            Dispatcher.Invoke(() =>
+            {
+              repo.LocalState = state;
+              repo.LocalPath = repoPath;
+            });
+
+            // Rafraîchir l'interface utilisateur
             CommandManager.InvalidateRequerySuggested();
 
             MessageBox.Show(
@@ -665,14 +672,22 @@ namespace GitHubManager
 
         try
         {
-          var success = await Task.Run(() => GitOperations.UpdateRepositoryAsync(Path.Combine(localPath, repo.Name)).Result);
+          var repoPath = Path.Combine(localPath, repo.Name);
+          var success = await Task.Run(() => GitOperations.UpdateRepositoryAsync(repoPath).Result);
 
           if (success)
           {
-            // Rafraîchir l'état de tous les dépôts
-            await CheckRepositoriesLocalStateAsync();
+            // Mettre à jour l'état du dépôt mis à jour
+            var (state, updatedRepoPath) = GitOperations.CheckRepositoryState(repo.Name, localPath);
             
-            // Mettre à jour l'interface utilisateur
+            // Mettre à jour les propriétés sur le thread UI
+            Dispatcher.Invoke(() =>
+            {
+              repo.LocalState = state;
+              repo.LocalPath = updatedRepoPath;
+            });
+
+            // Rafraîchir l'interface utilisateur
             CommandManager.InvalidateRequerySuggested();
 
             MessageBox.Show(
@@ -683,6 +698,15 @@ namespace GitHubManager
           }
           else
           {
+            // En cas d'échec, vérifier quand même l'état actuel
+            var (currentState, currentRepoPath) = GitOperations.CheckRepositoryState(repo.Name, localPath);
+            Dispatcher.Invoke(() =>
+            {
+              repo.LocalState = currentState;
+              repo.LocalPath = currentRepoPath;
+            });
+            CommandManager.InvalidateRequerySuggested();
+            
             MessageBox.Show(
               $"Erreur lors de la mise à jour du dépôt '{repo.Name}'.",
               "Erreur",
