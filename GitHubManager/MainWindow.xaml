@@ -170,15 +170,23 @@
                                             <Button.Style>
                                                 <Style TargetType="Button">
                                                     <Setter Property="Background" Value="Transparent" />
+                                                    <Setter Property="Content" Value="Mettre à jour" />
                                                     <Style.Triggers>
+                                                        <Trigger Property="IsEnabled" Value="False">
+                                                            <Setter Property="Background" Value="LightGray" />
+                                                        </Trigger>
                                                         <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.UpToDate}">
                                                             <Setter Property="Background" Value="Green" />
                                                             <Setter Property="Content" Value="À jour" />
+                                                            <Setter Property="IsEnabled" Value="True" />
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NeedsUpdate}">
                                                             <Setter Property="Background" Value="Red" />
+                                                            <Setter Property="Content" Value="Mettre à jour" />
+                                                            <Setter Property="IsEnabled" Value="True" />
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NotCloned}">
+                                                            <Setter Property="Background" Value="LightGray" />
                                                             <Setter Property="IsEnabled" Value="False" />
                                                             <Setter Property="Content" Value="Non cloné" />
                                                         </DataTrigger>

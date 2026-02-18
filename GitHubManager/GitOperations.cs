@@ -109,9 +109,17 @@ namespace GitHubManager
       try
       {
         var repoPath = Path.Combine(localPath, repoName);
+        Debug.WriteLine($"[CheckRepositoryState] Vérification de l'état pour {repoPath}");
 
-        if (!Directory.Exists(repoPath) || !IsGitRepository(repoPath))
+        if (!Directory.Exists(repoPath))
         {
+          Debug.WriteLine($"[CheckRepositoryState] Le dossier n'existe pas: {repoPath}");
+          return (RepositoryLocalState.NotCloned, repoPath);
+        }
+
+        if (!IsGitRepository(repoPath))
+        {
+          Debug.WriteLine($"[CheckRepositoryState] Le dossier n'est pas un dépôt Git: {repoPath}");
           return (RepositoryLocalState.NotCloned, repoPath);
         }
 
@@ -119,7 +127,7 @@ namespace GitHubManager
         var fetchInfo = new ProcessStartInfo
         {
           FileName = "git",
-          Arguments = "fetch --dry-run 2>&1",
+          Arguments = "fetch --dry-run",
           WorkingDirectory = repoPath,
           UseShellExecute = false,
           RedirectStandardOutput = true,
@@ -138,8 +146,11 @@ namespace GitHubManager
           var fetchOutput = fetchProcess.StandardOutput.ReadToEnd() + fetchProcess.StandardError.ReadToEnd();
 
           // Si fetch --dry-run indique "Already up to date" ou est vide, vérifier avec status
+          Debug.WriteLine($"[CheckRepositoryState] Sortie de 'git fetch --dry-run': {fetchOutput}");
+          
           if (string.IsNullOrWhiteSpace(fetchOutput) || fetchOutput.Contains("Already up to date"))
           {
+            Debug.WriteLine("[CheckRepositoryState] Aucun changement distant détecté, vérification de l'état local");
             // Vérifier s'il y a des commits en avance sur le remote
             var statusInfo = new ProcessStartInfo
             {
@@ -162,18 +173,23 @@ namespace GitHubManager
               statusProcess.WaitForExit();
               var statusOutput = statusProcess.StandardOutput.ReadToEnd();
 
+              Debug.WriteLine($"[CheckRepositoryState] Sortie de 'git status -sb': {statusOutput}");
+              
               // Si le status montre "ahead" ou "behind", le repo n'est pas à jour
               if (statusOutput.Contains("ahead") || statusOutput.Contains("behind"))
               {
+                Debug.WriteLine("[CheckRepositoryState] Dépôt nécessite une mise à jour (ahead/behind)");
                 return (RepositoryLocalState.NeedsUpdate, repoPath);
               }
 
+              Debug.WriteLine("[CheckRepositoryState] Dépôt à jour");
               return (RepositoryLocalState.UpToDate, repoPath);
             }
           }
           else
           {
             // Il y a des changements à récupérer
+            Debug.WriteLine("[CheckRepositoryState] Changements distants détectés, mise à jour nécessaire");
             return (RepositoryLocalState.NeedsUpdate, repoPath);
           }
         }

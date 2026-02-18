@@ -143,9 +143,8 @@ namespace GitHubManager
             using (var stream = await response.Content.ReadAsStreamAsync())
             {
               var serializer = new DataContractJsonSerializer(typeof(GitHubUser));
-              var user = serializer.ReadObject(stream) as GitHubUser;
 
-              var login = user != null ? user.Login : "(inconnu)";
+              var login = serializer.ReadObject(stream) is GitHubUser user ? user.Login : "(inconnu)";
               AuthStatusTextBlock.Text = $"Authentification réussie. Connecté en tant que {login}.";
               AuthStatusTextBlock.Foreground = Brushes.Green;
               
@@ -233,10 +232,7 @@ namespace GitHubManager
           
           if (!cancellationToken.IsCancellationRequested)
           {
-            if (loadingWindow != null)
-            {
-              loadingWindow.UpdateStatus("Ajout des dépôts à la liste...");
-            }
+            loadingWindow?.UpdateStatus("Ajout des dépôts à la liste...");
 
             _allRepositories.Clear();
             foreach (var repo in allRepos)
@@ -249,10 +245,7 @@ namespace GitHubManager
             ReposStatusTextBlock.Text = $"{_allRepositories.Count} dépôts chargés.";
 
             // Vérifier l'état local de tous les dépôts
-            if (loadingWindow != null)
-            {
-              loadingWindow.UpdateStatus("Vérification de l'état local des dépôts...");
-            }
+            loadingWindow?.UpdateStatus("Vérification de l'état local des dépôts...");
             await CheckRepositoriesLocalStateAsync();
           }
           else
@@ -272,11 +265,7 @@ namespace GitHubManager
       finally
       {
         // Fermer la fenêtre de chargement
-        if (loadingWindow != null)
-        {
-          loadingWindow.Close();
-          loadingWindow = null;
-        }
+        loadingWindow?.Close();
         _currentLoadingWindow = null;
 
         LoadReposButton.IsEnabled = true;
@@ -501,13 +490,10 @@ namespace GitHubManager
         var statusMessage = $"Chargement des dépôts... (page {page}, {allRepos.Count} déjà chargés)";
         ReposStatusTextBlock.Text = statusMessage;
         
-        if (loadingWindow != null)
-        {
-          loadingWindow.Dispatcher.Invoke(() =>
+        loadingWindow?.Dispatcher.Invoke(() =>
           {
             loadingWindow.UpdateStatus(statusMessage);
           });
-        }
 
         var url = $"https://api.github.com/user/repos?per_page={perPage}&page={page}";
         var response = await client.GetAsync(url, cancellationToken);
