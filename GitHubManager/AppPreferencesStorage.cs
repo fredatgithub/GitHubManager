@@ -28,12 +28,10 @@ namespace GitHubManager
     private const int DefaultItemsPerPage = 20;
     private const bool DefaultShowMessages = true;
     private static readonly string LocalPathFilePath = Path.Combine(
-      Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-      "GitHubManager",
+      AppDomain.CurrentDomain.BaseDirectory,
       "localpath.config");
     private static readonly string MaxReposFilePath = Path.Combine(
-      Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-      "GitHubManager",
+      AppDomain.CurrentDomain.BaseDirectory,
       "maxrepos.config");
 
     public static void SaveItemsPerPage(int itemsPerPage)
@@ -124,8 +122,12 @@ namespace GitHubManager
           Directory.CreateDirectory(LogDirectory);
         }
         
+        // Créer un nom de fichier avec la date du jour
+        string logFileName = $"log-{DateTime.Now:yyyy-MM-dd}.txt";
+        string logFilePath = Path.Combine(LogDirectory, logFileName);
+        
         // Ajouter le message au fichier de log avec un timestamp
-        File.AppendAllText(LogFilePath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {message}{Environment.NewLine}");
+        File.AppendAllText(logFilePath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {message}{Environment.NewLine}");
       }
       catch (Exception ex)
       {

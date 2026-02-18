@@ -7,8 +7,7 @@ namespace GitHubManager
   internal static class WindowSettingsStorage
   {
     private static readonly string SettingsFilePath = Path.Combine(
-      Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-      "GitHubManager",
+      AppDomain.CurrentDomain.BaseDirectory,
       "window.config");
 
     public static void Save(Window window)

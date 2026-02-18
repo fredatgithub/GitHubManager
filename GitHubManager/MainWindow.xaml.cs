@@ -134,13 +134,52 @@ namespace GitHubManager
     {
       try
       {
-          WindowSettingsStorage.Save(this);
-          SaveStoredPreferences();
-          LogInfo("Application fermée");
+        // Sauvegarder les paramètres de la fenêtre
+        WindowSettingsStorage.Save(this);
+        
+        // Sauvegarder les préférences
+        SaveStoredPreferences();
+        
+        // Sauvegarder les logs dans un fichier
+        if (LogTextBox != null)
+        {
+          string logContent = LogTextBox.Text;
+          if (!string.IsNullOrEmpty(logContent))
+          {
+            string logFileName = $"applog-{DateTime.Now:yyyyMMdd-HHmmss}.txt";
+            string logFilePath = Path.Combine(
+              Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+              "GitHubManager",
+              "Logs",
+              logFileName);
+              
+            string logDir = Path.GetDirectoryName(logFilePath);
+            if (!Directory.Exists(logDir))
+            {
+              Directory.CreateDirectory(logDir);
+            }
+            
+            File.WriteAllText(logFilePath, logContent);
+            LogInfo($"Journal de l'application sauvegardé dans: {logFilePath}");
+          }
+        }
+        
+        LogInfo("Application fermée");
       }
       catch (Exception ex)
       {
-          LogError($"Erreur lors de la fermeture de l'application: {ex.Message}");
+        LogError($"Erreur lors de la fermeture de l'application: {ex.Message}");
+        
+        // Essayer d'écrire l'erreur dans un fichier de secours
+        try
+        {
+          string errorLogPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+            $"GitHubManager_Error_{DateTime.Now:yyyyMMdd-HHmmss}.txt");
+            
+          File.WriteAllText(errorLogPath, $"Erreur lors de la fermeture de l'application:\n{ex}");
+        }
+        catch { /* Ignorer les erreurs de sauvegarde du fichier d'erreur */ }
       }
     }
 
