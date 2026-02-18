@@ -223,6 +223,9 @@ namespace GitHubManager
             _currentPage = 1;
             UpdatePagination();
             ReposStatusTextBlock.Text = $"{_allRepositories.Count} dépôts chargés.";
+
+            // Vérifier l'état local de tous les dépôts
+            await CheckRepositoriesLocalStateAsync();
           }
           else
           {
@@ -372,6 +375,39 @@ namespace GitHubManager
       }
     }
 
+    private async Task CheckRepositoriesLocalStateAsync()
+    {
+      var localPath = LocalReposPathTextBox?.Text?.Trim();
+      
+      if (string.IsNullOrWhiteSpace(localPath))
+      {
+        // Si pas de chemin local, tous les repos sont marqués comme non clonés
+        foreach (var repo in _allRepositories)
+        {
+          repo.LocalState = RepositoryLocalState.NotCloned;
+        }
+        return;
+      }
+
+      // Vérifier l'état de chaque dépôt de manière asynchrone
+      await Task.Run(() =>
+      {
+        foreach (var repo in _allRepositories)
+        {
+          var state = GitOperations.CheckRepositoryState(repo.Name, localPath);
+          
+          // Mettre à jour sur le thread UI
+          Dispatcher.Invoke(() =>
+          {
+            repo.LocalState = state;
+          });
+        }
+      });
+
+      // Rafraîchir l'affichage de la pagination pour mettre à jour les couleurs
+      UpdatePagination();
+    }
+
     private void ItemsPerPageComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
       if (ItemsPerPageComboBox != null && ItemsPerPageComboBox.SelectedItem is int selectedValue)
@@ -500,6 +536,12 @@ namespace GitHubManager
 
           if (success)
           {
+            // Mettre à jour l'état local du dépôt
+            if (!string.IsNullOrWhiteSpace(localPath))
+            {
+              repo.LocalState = GitOperations.CheckRepositoryState(repo.Name, localPath);
+            }
+
             MessageBox.Show(
               $"Le dépôt '{repo.Name}' a été cloné/mis à jour avec succès.",
               "Succès",

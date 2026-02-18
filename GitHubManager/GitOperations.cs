@@ -103,5 +103,85 @@ namespace GitHubManager
         return false;
       }
     }
+
+    public static RepositoryLocalState CheckRepositoryState(string repoName, string localPath)
+    {
+      try
+      {
+        var repoPath = Path.Combine(localPath, repoName);
+
+        if (!Directory.Exists(repoPath) || !IsGitRepository(repoPath))
+        {
+          return RepositoryLocalState.NotCloned;
+        }
+
+        // Récupérer les informations distantes sans modifier le repo
+        var fetchInfo = new ProcessStartInfo
+        {
+          FileName = "git",
+          Arguments = "fetch --dry-run 2>&1",
+          WorkingDirectory = repoPath,
+          UseShellExecute = false,
+          RedirectStandardOutput = true,
+          RedirectStandardError = true,
+          CreateNoWindow = true
+        };
+
+        using (var fetchProcess = Process.Start(fetchInfo))
+        {
+          if (fetchProcess == null)
+          {
+            return RepositoryLocalState.NotCloned;
+          }
+
+          fetchProcess.WaitForExit();
+          var fetchOutput = fetchProcess.StandardOutput.ReadToEnd() + fetchProcess.StandardError.ReadToEnd();
+
+          // Si fetch --dry-run indique "Already up to date" ou est vide, vérifier avec status
+          if (string.IsNullOrWhiteSpace(fetchOutput) || fetchOutput.Contains("Already up to date"))
+          {
+            // Vérifier s'il y a des commits en avance sur le remote
+            var statusInfo = new ProcessStartInfo
+            {
+              FileName = "git",
+              Arguments = "status -sb",
+              WorkingDirectory = repoPath,
+              UseShellExecute = false,
+              RedirectStandardOutput = true,
+              RedirectStandardError = true,
+              CreateNoWindow = true
+            };
+
+            using (var statusProcess = Process.Start(statusInfo))
+            {
+              if (statusProcess == null)
+              {
+                return RepositoryLocalState.UpToDate;
+              }
+
+              statusProcess.WaitForExit();
+              var statusOutput = statusProcess.StandardOutput.ReadToEnd();
+
+              // Si le status montre "ahead" ou "behind", le repo n'est pas à jour
+              if (statusOutput.Contains("ahead") || statusOutput.Contains("behind"))
+              {
+                return RepositoryLocalState.NeedsUpdate;
+              }
+
+              return RepositoryLocalState.UpToDate;
+            }
+          }
+          else
+          {
+            // Il y a des changements à récupérer
+            return RepositoryLocalState.NeedsUpdate;
+          }
+        }
+      }
+      catch
+      {
+        return RepositoryLocalState.NotCloned;
+      }
+    }
   }
 }

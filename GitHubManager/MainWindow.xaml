@@ -125,7 +125,24 @@
                                                 Click="CloneOrUpdateButton_Click"
                                                 Tag="{Binding}"
                                                 Padding="5,2"
-                                                Margin="2" />
+                                                Margin="2">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding LocalState}" Value="UpToDate">
+                                                            <Setter Property="Background" Value="Green" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding LocalState}" Value="NeedsUpdate">
+                                                            <Setter Property="Background" Value="Red" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding LocalState}" Value="NotCloned">
+                                                            <Setter Property="Background" Value="Red" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
