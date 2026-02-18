@@ -1,0 +1,108 @@
+<Window x:Class="GitHubManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GitHubManager"
+        mc:Ignorable="d"
+        Title="GitHub Manager" Height="450" Width="900"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="10">
+        <TabControl>
+            <!-- Onglet authentification -->
+            <TabItem Header="Authentification">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0"
+                               Margin="0,0,10,10"
+                               VerticalAlignment="Center"
+                               Text="Nom d'utilisateur GitHub :" />
+                    <TextBox x:Name="UserNameTextBox"
+                             Grid.Row="0" Grid.Column="1"
+                             Margin="0,0,0,10"
+                             MinWidth="200" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0"
+                               Margin="0,0,10,10"
+                               VerticalAlignment="Center"
+                               Text="Token personnel (PAT) :" />
+                    <PasswordBox x:Name="TokenPasswordBox"
+                                 Grid.Row="1" Grid.Column="1"
+                                 Margin="0,0,0,10"
+                                 MinWidth="200" />
+
+                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Left"
+                                Margin="0,0,0,10">
+                        <Button x:Name="TestAuthButton"
+                                Width="120"
+                                Content="Tester"
+                                Click="TestAuthButton_Click" />
+                        <TextBlock x:Name="AuthStatusTextBlock"
+                                   Margin="15,0,0,0"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- Onglet dépôts -->
+            <TabItem Header="Dépôts">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0"
+                                Orientation="Horizontal"
+                                Margin="0,0,0,10">
+                        <Button x:Name="LoadReposButton"
+                                Width="150"
+                                Content="Charger les dépôts"
+                                Click="LoadReposButton_Click" />
+                        <TextBlock x:Name="ReposStatusTextBlock"
+                                   Margin="15,0,0,0"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <DataGrid x:Name="RepositoriesDataGrid"
+                              Grid.Row="1"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              Margin="0"
+                              HeadersVisibility="Column"
+                              SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Nom"
+                                                Binding="{Binding Name}"
+                                                Width="2*" />
+                            <DataGridTextColumn Header="Description"
+                                                Binding="{Binding Description}"
+                                                Width="3*" />
+                            <DataGridCheckBoxColumn Header="Privé"
+                                                    Binding="{Binding IsPrivate}"
+                                                    Width="Auto" />
+                            <DataGridTextColumn Header="URL"
+                                                Binding="{Binding HtmlUrl}"
+                                                Width="3*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
