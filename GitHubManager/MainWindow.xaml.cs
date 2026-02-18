@@ -28,6 +28,7 @@ namespace GitHubManager
     private int _totalPages = 1;
     private bool _hasStoredCredentials = false;
     private CancellationTokenSource _loadCancellationTokenSource;
+    private LoadingWindow _currentLoadingWindow;
 
     public MainWindow()
     {
@@ -185,6 +186,8 @@ namespace GitHubManager
       LoadReposButton.IsEnabled = false;
       CancelLoadButton.IsEnabled = true;
 
+      LoadingWindow loadingWindow = null;
+
       try
       {
         if (string.IsNullOrWhiteSpace(_token))
@@ -192,6 +195,14 @@ namespace GitHubManager
           ReposStatusTextBlock.Text = "Veuillez d'abord valider l'authentification (onglet Authentification).";
           return;
         }
+
+        // Afficher la fenêtre de chargement
+        loadingWindow = new LoadingWindow
+        {
+          Owner = this
+        };
+        _currentLoadingWindow = loadingWindow;
+        loadingWindow.Show();
 
         // Récupérer le nombre maximum de repos à charger
         int? maxRepos = null;
@@ -210,10 +221,15 @@ namespace GitHubManager
         using (var client = CreateHttpClient())
         {
           // Charger les dépôts en paginant
-          var allRepos = await LoadAllRepositoriesAsync(client, cancellationToken, maxRepos);
+          var allRepos = await LoadAllRepositoriesAsync(client, cancellationToken, maxRepos, loadingWindow);
           
           if (!cancellationToken.IsCancellationRequested)
           {
+            if (loadingWindow != null)
+            {
+              loadingWindow.UpdateStatus("Ajout des dépôts à la liste...");
+            }
+
             _allRepositories.Clear();
             foreach (var repo in allRepos)
             {
@@ -225,6 +241,10 @@ namespace GitHubManager
             ReposStatusTextBlock.Text = $"{_allRepositories.Count} dépôts chargés.";
 
             // Vérifier l'état local de tous les dépôts
+            if (loadingWindow != null)
+            {
+              loadingWindow.UpdateStatus("Vérification de l'état local des dépôts...");
+            }
             await CheckRepositoriesLocalStateAsync();
           }
           else
@@ -243,6 +263,14 @@ namespace GitHubManager
       }
       finally
       {
+        // Fermer la fenêtre de chargement
+        if (loadingWindow != null)
+        {
+          loadingWindow.Close();
+          loadingWindow = null;
+        }
+        _currentLoadingWindow = null;
+
         LoadReposButton.IsEnabled = true;
         CancelLoadButton.IsEnabled = false;
         if (_loadCancellationTokenSource != null)
@@ -347,6 +375,11 @@ namespace GitHubManager
       {
         AppPreferencesStorage.SaveLocalReposPath(LocalReposPathTextBox.Text);
       }
+      
+      if (MaxReposComboBox != null && MaxReposComboBox.SelectedItem != null)
+      {
+        AppPreferencesStorage.SaveMaxRepos(MaxReposComboBox.SelectedItem);
+      }
     }
 
     private void InitializeItemsPerPageComboBox()
@@ -363,7 +396,21 @@ namespace GitHubManager
       if (MaxReposComboBox != null)
       {
         MaxReposComboBox.ItemsSource = new object[] { "Tous", 50, 100, 200, 500 };
-        MaxReposComboBox.SelectedItem = "Tous";
+        
+        // Charger la valeur sauvegardée
+        var savedValue = AppPreferencesStorage.LoadMaxRepos();
+        MaxReposComboBox.SelectedItem = savedValue;
+        
+        // Ajouter le gestionnaire d'événement pour sauvegarder lors du changement
+        MaxReposComboBox.SelectionChanged += MaxReposComboBox_SelectionChanged;
+      }
+    }
+
+    private void MaxReposComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+      if (MaxReposComboBox != null && MaxReposComboBox.SelectedItem != null)
+      {
+        AppPreferencesStorage.SaveMaxRepos(MaxReposComboBox.SelectedItem);
       }
     }
 
@@ -372,6 +419,13 @@ namespace GitHubManager
       if (_loadCancellationTokenSource != null && !_loadCancellationTokenSource.IsCancellationRequested)
       {
         _loadCancellationTokenSource.Cancel();
+        
+        // Fermer la fenêtre de chargement si elle est ouverte
+        if (_currentLoadingWindow != null)
+        {
+          _currentLoadingWindow.Close();
+          _currentLoadingWindow = null;
+        }
       }
     }
 
@@ -419,7 +473,7 @@ namespace GitHubManager
       }
     }
 
-    private async Task<List<GitHubRepository>> LoadAllRepositoriesAsync(HttpClient client, CancellationToken cancellationToken, int? maxRepos = null)
+    private async Task<List<GitHubRepository>> LoadAllRepositoriesAsync(HttpClient client, CancellationToken cancellationToken, int? maxRepos = null, LoadingWindow loadingWindow = null)
     {
       var allRepos = new List<GitHubRepository>();
       var serializer = new DataContractJsonSerializer(typeof(List<GitHubRepository>));
@@ -435,7 +489,16 @@ namespace GitHubManager
           break;
         }
 
-        ReposStatusTextBlock.Text = $"Chargement des dépôts... (page {page}, {allRepos.Count} déjà chargés)";
+        var statusMessage = $"Chargement des dépôts... (page {page}, {allRepos.Count} déjà chargés)";
+        ReposStatusTextBlock.Text = statusMessage;
+        
+        if (loadingWindow != null)
+        {
+          loadingWindow.Dispatcher.Invoke(() =>
+          {
+            loadingWindow.UpdateStatus(statusMessage);
+          });
+        }
 
         var url = $"https://api.github.com/user/repos?per_page={perPage}&page={page}";
         var response = await client.GetAsync(url, cancellationToken);

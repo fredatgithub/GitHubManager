@@ -15,6 +15,10 @@ namespace GitHubManager
       Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
       "GitHubManager",
       "localpath.config");
+    private static readonly string MaxReposFilePath = Path.Combine(
+      Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+      "GitHubManager",
+      "maxrepos.config");
 
     public static void SaveItemsPerPage(int itemsPerPage)
     {
@@ -76,6 +80,60 @@ namespace GitHubManager
       {
         return string.Empty;
       }
+    }
+
+    public static void SaveMaxRepos(object maxRepos)
+    {
+      var directory = Path.GetDirectoryName(MaxReposFilePath);
+      if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+      {
+        Directory.CreateDirectory(directory);
+      }
+
+      string valueToSave;
+      if (maxRepos is string strValue)
+      {
+        valueToSave = strValue;
+      }
+      else if (maxRepos is int intValue)
+      {
+        valueToSave = intValue.ToString();
+      }
+      else
+      {
+        valueToSave = "Tous";
+      }
+
+      File.WriteAllText(MaxReposFilePath, valueToSave);
+    }
+
+    public static object LoadMaxRepos()
+    {
+      if (!File.Exists(MaxReposFilePath))
+      {
+        return "Tous";
+      }
+
+      try
+      {
+        var content = File.ReadAllText(MaxReposFilePath).Trim();
+        
+        if (content == "Tous")
+        {
+          return "Tous";
+        }
+        
+        if (int.TryParse(content, out var intValue))
+        {
+          return intValue;
+        }
+      }
+      catch
+      {
+        // En cas d'erreur, retourner la valeur par défaut
+      }
+
+      return "Tous";
     }
   }
 }
