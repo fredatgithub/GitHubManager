@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GitHubManager
@@ -106,28 +107,65 @@ namespace GitHubManager
 
     public static (RepositoryLocalState State, string Path) CheckRepositoryState(string repoName, string localPath)
     {
+      Debug.WriteLine($"\n[CheckRepositoryState] Début de la vérification pour le dépôt: {repoName}");
+      Debug.WriteLine($"[CheckRepositoryState] Chemin local fourni: {localPath}");
+      
       try
       {
+        if (string.IsNullOrEmpty(localPath))
+        {
+          Debug.WriteLine($"[CheckRepositoryState] ERREUR: Le chemin local est vide ou null pour le dépôt {repoName}");
+          return (RepositoryLocalState.NotCloned, string.Empty);
+        }
+
+        // Vérifier si le chemin local existe
+        if (!Directory.Exists(localPath))
+        {
+          Debug.WriteLine($"[CheckRepositoryState] ERREUR: Le répertoire local n'existe pas: {localPath}");
+          return (RepositoryLocalState.NotCloned, string.Empty);
+        }
+
         var repoPath = Path.Combine(localPath, repoName);
-        Debug.WriteLine($"[CheckRepositoryState] Vérification de l'état pour {repoPath}");
+        var fullPath = Path.GetFullPath(repoPath);
+        Debug.WriteLine($"[CheckRepositoryState] Chemin complet du dépôt: {fullPath}");
+        Debug.WriteLine($"[CheckRepositoryState] Le répertoire existe: {Directory.Exists(repoPath)}");
 
         if (!Directory.Exists(repoPath))
         {
-          Debug.WriteLine($"[CheckRepositoryState] Le dossier n'existe pas: {repoPath}");
+          Debug.WriteLine($"[CheckRepositoryState] Le dossier du dépôt n'existe pas: {repoPath}");
+          Debug.WriteLine($"[CheckRepositoryState] Répertoire parent existe: {Directory.Exists(Path.GetDirectoryName(repoPath))}");
+          Debug.WriteLine($"[CheckRepositoryState] Contenu du répertoire parent: {string.Join(", ", Directory.EnumerateFileSystemEntries(localPath).Select(Path.GetFileName))}");
           return (RepositoryLocalState.NotCloned, repoPath);
         }
 
+        // Vérifier le contenu du dossier
+        var files = Directory.EnumerateFileSystemEntries(repoPath).ToList();
+        Debug.WriteLine($"[CheckRepositoryState] Contenu du dossier ({files.Count} éléments):");
+        foreach (var file in files.Take(20)) // Afficher les 20 premiers fichiers max
+        {
+          var attr = File.GetAttributes(file);
+          Debug.WriteLine($"  - {Path.GetFileName(file)} ({(attr.HasFlag(FileAttributes.Directory) ? "Dossier" : "Fichier")})");
+        }
+        if (files.Count > 20)
+          Debug.WriteLine($"  ... et {files.Count - 20} autres éléments");
+
         if (!IsGitRepository(repoPath))
         {
-          Debug.WriteLine($"[CheckRepositoryState] Le dossier n'est pas un dépôt Git: {repoPath}");
+          Debug.WriteLine($"[CheckRepositoryState] Le dossier n'est pas un dépôt Git valide: {repoPath}");
+          Debug.WriteLine($"[CheckRepositoryState] Dossier .git existe: {Directory.Exists(Path.Combine(repoPath, ".git"))}");
+          if (Directory.Exists(Path.Combine(repoPath, ".git")))
+          {
+            Debug.WriteLine($"[CheckRepositoryState] Contenu du dossier .git: {string.Join(", ", Directory.EnumerateFileSystemEntries(Path.Combine(repoPath, ".git")).Select(Path.GetFileName))}");
+          }
           return (RepositoryLocalState.NotCloned, repoPath);
         }
 
         // Récupérer les informations distantes sans modifier le repo
+        Debug.WriteLine($"[CheckRepositoryState] Exécution de 'git fetch --dry-run' dans {repoPath}");
         var fetchInfo = new ProcessStartInfo
         {
           FileName = "git",
-          Arguments = "fetch --dry-run",
+          Arguments = "fetch --dry-run --verbose",  // Ajout de --verbose pour plus d'informations
           WorkingDirectory = repoPath,
           UseShellExecute = false,
           RedirectStandardOutput = true,
@@ -135,23 +173,64 @@ namespace GitHubManager
           CreateNoWindow = true
         };
 
-        using (var fetchProcess = Process.Start(fetchInfo))
+        using (var fetchProcess = new Process { StartInfo = fetchInfo })
         {
-          if (fetchProcess == null)
+          var output = new System.Text.StringBuilder();
+          var error = new System.Text.StringBuilder();
+
+          fetchProcess.OutputDataReceived += (s, e) => {
+            if (!string.IsNullOrEmpty(e.Data)) {
+              output.AppendLine(e.Data);
+              Debug.WriteLine($"[Git fetch] {e.Data}");
+            }
+          };
+          
+          fetchProcess.ErrorDataReceived += (s, e) => {
+            if (!string.IsNullOrEmpty(e.Data)) {
+              error.AppendLine(e.Data);
+              Debug.WriteLine($"[Git fetch ERROR] {e.Data}");
+            }
+          };
+
+          Debug.WriteLine("[CheckRepositoryState] Démarrage du processus git fetch...");
+          if (!fetchProcess.Start())
           {
+            Debug.WriteLine("[CheckRepositoryState] Échec du démarrage du processus git fetch");
             return (RepositoryLocalState.NotCloned, repoPath);
           }
 
-          fetchProcess.WaitForExit();
-          var fetchOutput = fetchProcess.StandardOutput.ReadToEnd() + fetchProcess.StandardError.ReadToEnd();
+          fetchProcess.BeginOutputReadLine();
+          fetchProcess.BeginErrorReadLine();
 
-          // Si fetch --dry-run indique "Already up to date" ou est vide, vérifier avec status
-          Debug.WriteLine($"[CheckRepositoryState] Sortie de 'git fetch --dry-run': {fetchOutput}");
+          // Attendre avec un timeout de 30 secondes maximum
+          if (!fetchProcess.WaitForExit(30000))
+          {
+            Debug.WriteLine("[CheckRepositoryState] Timeout de la commande git fetch après 30 secondes");
+            try { fetchProcess.Kill(); } catch { }
+            return (RepositoryLocalState.NeedsUpdate, repoPath);
+          }
+
+          var exitCode = fetchProcess.ExitCode;
+          var fetchOutput = output.ToString() + error.ToString();
           
-          if (string.IsNullOrWhiteSpace(fetchOutput) || fetchOutput.Contains("Already up to date"))
+          Debug.WriteLine($"[CheckRepositoryState] Code de sortie git fetch: {exitCode}");
+          Debug.WriteLine($"[CheckRepositoryState] Sortie complète de 'git fetch --dry-run':\n{fetchOutput}");
+          
+          if (exitCode != 0)
+          {
+            Debug.WriteLine($"[CheckRepositoryState] Erreur lors de l'exécution de git fetch. Code: {exitCode}");
+            return (RepositoryLocalState.NeedsUpdate, repoPath);
+          }
+          
+          // Si fetch --dry-run indique "Already up to date" ou est vide, vérifier avec status
+          if (string.IsNullOrWhiteSpace(fetchOutput) || 
+              fetchOutput.Contains("Already up to date") ||
+              fetchOutput.Contains("Tout est à jour"))
           {
             Debug.WriteLine("[CheckRepositoryState] Aucun changement distant détecté, vérification de l'état local");
-            // Vérifier s'il y a des commits en avance sur le remote
+            
+            // Vérifier l'état du dépôt local
+            Debug.WriteLine("[CheckRepositoryState] Vérification de l'état local avec 'git status -sb'");
             var statusInfo = new ProcessStartInfo
             {
               FileName = "git",

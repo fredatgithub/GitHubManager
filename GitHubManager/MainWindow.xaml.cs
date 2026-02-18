@@ -526,29 +526,64 @@ namespace GitHubManager
       
       if (string.IsNullOrWhiteSpace(localPath))
       {
+        LogInfo("Aucun chemin local spécifié, marquage de tous les dépôts comme non clonés");
         // Si pas de chemin local, tous les repos sont marqués comme non clonés
         foreach (var repo in _allRepositories)
         {
           repo.LocalState = RepositoryLocalState.NotCloned;
+          repo.LocalPath = string.Empty;
         }
         return;
       }
 
-      // Vérifier l'état de chaque dépôt de manière asynchrone
-      await Task.Run(() =>
+      LogInfo($"Vérification de l'état des dépôts dans le répertoire: {localPath}");
+      LogInfo($"Nombre de dépôts à vérifier: {_allRepositories.Count}");
+
+      try
       {
-        foreach (var repo in _allRepositories)
+        // Vérifier l'état de chaque dépôt de manière asynchrone
+        await Task.Run(() =>
         {
-          var (state, repoPath) = GitOperations.CheckRepositoryState(repo.Name, localPath);
-          
-          // Mettre à jour sur le thread UI
-          Dispatcher.Invoke(() =>
+          int processed = 0;
+          foreach (var repo in _allRepositories)
           {
-            repo.LocalState = state;
-            repo.LocalPath = repoPath;
-          });
-        }
-      });
+            try 
+            {
+              LogInfo($"Vérification du dépôt: {repo.Name}");
+              var (state, repoPath) = GitOperations.CheckRepositoryState(repo.Name, localPath);
+              
+              // Mettre à jour sur le thread UI
+              Dispatcher.Invoke(() =>
+              {
+                repo.LocalState = state;
+                repo.LocalPath = repoPath;
+                LogInfo($"État du dépôt {repo.Name}: {state}, Chemin: {repoPath}");
+              });
+            }
+            catch (Exception ex)
+            {
+              LogError($"Erreur lors de la vérification du dépôt {repo.Name}: {ex.Message}");
+              Dispatcher.Invoke(() =>
+              {
+                repo.LocalState = RepositoryLocalState.NotCloned;
+                repo.LocalPath = string.Empty;
+              });
+            }
+            
+            processed++;
+            if (processed % 10 == 0) // Tous les 10 dépôts
+            {
+              LogInfo($"Progression: {processed}/{_allRepositories.Count} dépôts vérifiés");
+            }
+          }
+        });
+
+        LogInfo("Vérification des dépôts terminée");
+      }
+      catch (Exception ex)
+      {
+        LogError($"Erreur lors de la vérification des dépôts: {ex}");
+      }
 
       // Rafraîchir l'affichage de la pagination pour mettre à jour les couleurs
       UpdatePagination();
