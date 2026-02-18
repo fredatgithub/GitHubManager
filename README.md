@@ -1,1 +1,1 @@
-# GitHubManager
+# GitHub Manager
