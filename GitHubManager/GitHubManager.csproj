@@ -74,6 +74,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Converters\CloneButtonEnabledConverter.cs" />
+    <Compile Include="Converters\UpdateButtonEnabledConverter.cs" />
     <Compile Include="AppPreferencesStorage.cs" />
     <Compile Include="CredentialStorage.cs" />
     <Compile Include="GitOperations.cs" />

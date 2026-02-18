@@ -35,7 +35,7 @@ namespace GitHubManager
       return Directory.Exists(Path.Combine(path, ".git"));
     }
 
-    private static async Task<bool> CloneRepositoryAsync(string repoUrl, string localPath, string repoName)
+    public static async Task<bool> CloneRepositoryAsync(string repoUrl, string localPath, string repoName)
     {
       try
       {
@@ -72,7 +72,7 @@ namespace GitHubManager
       }
     }
 
-    private static async Task<bool> UpdateRepositoryAsync(string repoPath)
+    public static async Task<bool> UpdateRepositoryAsync(string repoPath)
     {
       try
       {

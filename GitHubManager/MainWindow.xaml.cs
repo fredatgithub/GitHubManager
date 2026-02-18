@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Windows.Input;
 using System.Net.Http.Headers;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using WinForms = System.Windows.Forms;
 
@@ -579,7 +580,7 @@ namespace GitHubManager
       return linkHeader.Contains("rel=\"next\"");
     }
 
-    private async void CloneOrUpdateButton_Click(object sender, RoutedEventArgs e)
+    private async void CloneButton_Click(object sender, RoutedEventArgs e)
     {
       if (sender is System.Windows.Controls.Button button && button.Tag is GitHubRepository repo)
       {
@@ -596,34 +597,23 @@ namespace GitHubManager
         }
 
         button.IsEnabled = false;
-        button.Content = "En cours...";
+        var originalContent = button.Content;
+        button.Content = "Clonage en cours...";
 
         try
         {
-          var success = await GitOperations.CloneOrUpdateRepositoryAsync(
-            repo.HtmlUrl,
-            localPath,
-            repo.Name);
+          var success = await Task.Run(() => GitOperations.CloneRepositoryAsync(repo.HtmlUrl, localPath, repo.Name).Result);
 
           if (success)
           {
-            // Mettre à jour l'état local du dépôt et le chemin
-            if (!string.IsNullOrWhiteSpace(localPath))
-            {
-              // Rafraîchir l'état de tous les dépôts pour s'assurer que tout est à jour
-              await CheckRepositoriesLocalStateAsync();
-              
-              // Mettre à jour le dépôt actuel
-              var (state, path) = GitOperations.CheckRepositoryState(repo.Name, localPath);
-              repo.LocalState = state;
-              repo.LocalPath = path;
-              
-              // Forcer la mise à jour de l'interface utilisateur
-              CommandManager.InvalidateRequerySuggested();
-            }
+            // Rafraîchir l'état de tous les dépôts
+            await CheckRepositoriesLocalStateAsync();
+            
+            // Mettre à jour l'interface utilisateur
+            CommandManager.InvalidateRequerySuggested();
 
             MessageBox.Show(
-              $"Le dépôt '{repo.Name}' a été cloné/mis à jour avec succès.",
+              $"Le dépôt '{repo.Name}' a été cloné avec succès.",
               "Succès",
               MessageBoxButton.OK,
               MessageBoxImage.Information);
@@ -631,7 +621,7 @@ namespace GitHubManager
           else
           {
             MessageBox.Show(
-              $"Erreur lors du clonage/mise à jour du dépôt '{repo.Name}'. Vérifiez que Git est installé et que le chemin est valide.",
+              $"Erreur lors du clonage du dépôt '{repo.Name}'. Vérifiez que Git est installé et que le chemin est valide.",
               "Erreur",
               MessageBoxButton.OK,
               MessageBoxImage.Error);
@@ -640,7 +630,7 @@ namespace GitHubManager
         catch (Exception ex)
         {
           MessageBox.Show(
-            $"Erreur : {ex.Message}",
+            $"Erreur lors du clonage : {ex.Message}",
             "Erreur",
             MessageBoxButton.OK,
             MessageBoxImage.Error);
@@ -648,7 +638,70 @@ namespace GitHubManager
         finally
         {
           button.IsEnabled = true;
-          button.Content = "Cloner/Mettre à jour";
+          button.Content = originalContent;
+        }
+      }
+    }
+
+    private async void UpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+      if (sender is System.Windows.Controls.Button button && button.Tag is GitHubRepository repo)
+      {
+        var localPath = LocalReposPathTextBox?.Text?.Trim();
+        
+        if (string.IsNullOrWhiteSpace(localPath))
+        {
+          MessageBox.Show(
+            "Veuillez d'abord spécifier le chemin local des dépôts dans l'onglet Authentification.",
+            "Chemin manquant",
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
+          return;
+        }
+
+        button.IsEnabled = false;
+        var originalContent = button.Content;
+        button.Content = "Mise à jour en cours...";
+
+        try
+        {
+          var success = await Task.Run(() => GitOperations.UpdateRepositoryAsync(Path.Combine(localPath, repo.Name)).Result);
+
+          if (success)
+          {
+            // Rafraîchir l'état de tous les dépôts
+            await CheckRepositoriesLocalStateAsync();
+            
+            // Mettre à jour l'interface utilisateur
+            CommandManager.InvalidateRequerySuggested();
+
+            MessageBox.Show(
+              $"Le dépôt '{repo.Name}' a été mis à jour avec succès.",
+              "Succès",
+              MessageBoxButton.OK,
+              MessageBoxImage.Information);
+          }
+          else
+          {
+            MessageBox.Show(
+              $"Erreur lors de la mise à jour du dépôt '{repo.Name}'.",
+              "Erreur",
+              MessageBoxButton.OK,
+              MessageBoxImage.Error);
+          }
+        }
+        catch (Exception ex)
+        {
+          MessageBox.Show(
+            $"Erreur lors de la mise à jour : {ex.Message}",
+            "Erreur",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+        }
+        finally
+        {
+          button.IsEnabled = true;
+          button.Content = originalContent;
         }
       }
     }

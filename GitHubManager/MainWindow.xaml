@@ -5,9 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GitHubManager"
         xmlns:enums="clr-namespace:GitHubManager"
+        xmlns:converters="clr-namespace:GitHubManager.Converters"
         mc:Ignorable="d"
         Title="GitHub Manager" Height="450" Width="900"
         WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <converters:CloneButtonEnabledConverter x:Key="CloneButtonEnabledConverter" />
+        <converters:UpdateButtonEnabledConverter x:Key="UpdateButtonEnabledConverter" />
+    </Window.Resources>
     <Grid Margin="10">
         <TabControl x:Name="MainTabControl">
             <!-- Onglet authentification -->
@@ -119,26 +124,63 @@
                               HeadersVisibility="Column"
                               SelectionMode="Single">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="Action" Width="Auto">
+                            <!-- Colonne Cloner -->
+                            <DataGridTemplateColumn Header="Cloner" Width="Auto">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Content="Cloner/Mettre à jour"
-                                                Click="CloneOrUpdateButton_Click"
+                                        <Button Content="Cloner"
+                                                Click="CloneButton_Click"
                                                 Tag="{Binding}"
                                                 Padding="5,2"
-                                                Margin="2">
+                                                Margin="2"
+                                                IsEnabled="{Binding LocalState, Converter={StaticResource CloneButtonEnabledConverter}}">
                                             <Button.Style>
                                                 <Style TargetType="Button">
                                                     <Setter Property="Background" Value="Transparent" />
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.UpToDate}">
                                                             <Setter Property="Background" Value="Green" />
+                                                            <Setter Property="Content" Value="Cloné" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NeedsUpdate}">
+                                                            <Setter Property="Background" Value="Green" />
+                                                            <Setter Property="Content" Value="Cloné" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NotCloned}">
+                                                            <Setter Property="Background" Value="Red" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Colonne Mettre à jour -->
+                            <DataGridTemplateColumn Header="Mettre à jour" Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Mettre à jour"
+                                                Click="UpdateButton_Click"
+                                                Tag="{Binding}"
+                                                Padding="5,2"
+                                                Margin="2"
+                                                IsEnabled="{Binding LocalState, Converter={StaticResource UpdateButtonEnabledConverter}}">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.UpToDate}">
+                                                            <Setter Property="Background" Value="Green" />
+                                                            <Setter Property="Content" Value="À jour" />
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NeedsUpdate}">
                                                             <Setter Property="Background" Value="Red" />
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NotCloned}">
-                                                            <Setter Property="Background" Value="Red" />
+                                                            <Setter Property="IsEnabled" Value="False" />
+                                                            <Setter Property="Content" Value="Non cloné" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
