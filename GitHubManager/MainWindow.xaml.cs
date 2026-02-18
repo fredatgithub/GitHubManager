@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -26,6 +27,7 @@ namespace GitHubManager
     private int _currentPage = 1;
     private int _totalPages = 1;
     private bool _hasStoredCredentials = false;
+    private CancellationTokenSource _loadCancellationTokenSource;
 
     public MainWindow()
     {
@@ -41,6 +43,7 @@ namespace GitHubManager
       Loaded += (s, e) =>
       {
         InitializeItemsPerPageComboBox();
+        InitializeMaxReposComboBox();
         UpdatePaginationUI();
       };
     }
@@ -108,6 +111,8 @@ namespace GitHubManager
       {
         AuthStatusTextBlock.Text = "Test de l'authentification en cours...";
         AuthStatusTextBlock.Foreground = Brushes.Black;
+        // Réinitialiser la couleur du bouton
+        TestAuthButton.Background = System.Windows.Media.Brushes.Transparent;
       }
 
       try
@@ -121,6 +126,7 @@ namespace GitHubManager
           {
             AuthStatusTextBlock.Text = "Veuillez saisir un token personnel GitHub (PAT).";
             AuthStatusTextBlock.Foreground = Brushes.Red;
+            TestAuthButton.Background = Brushes.Red;
           }
           return;
         }
@@ -139,6 +145,9 @@ namespace GitHubManager
               var login = user != null ? user.Login : "(inconnu)";
               AuthStatusTextBlock.Text = $"Authentification réussie. Connecté en tant que {login}.";
               AuthStatusTextBlock.Foreground = Brushes.Green;
+              
+              // Colorer le bouton en vert
+              TestAuthButton.Background = Brushes.Green;
 
               CredentialStorage.Save(userName, _token);
             }
@@ -147,6 +156,7 @@ namespace GitHubManager
           {
             AuthStatusTextBlock.Text = $"Échec de l'authentification (code HTTP {(int)response.StatusCode}).";
             AuthStatusTextBlock.Foreground = Brushes.Red;
+            TestAuthButton.Background = Brushes.Red;
           }
         }
       }
@@ -154,13 +164,26 @@ namespace GitHubManager
       {
         AuthStatusTextBlock.Text = $"Erreur lors du test : {ex.Message}";
         AuthStatusTextBlock.Foreground = Brushes.Red;
+        TestAuthButton.Background = Brushes.Red;
       }
     }
 
     private async void LoadReposButton_Click(object sender, RoutedEventArgs e)
     {
+      // Annuler le chargement précédent s'il existe
+      if (_loadCancellationTokenSource != null)
+      {
+        _loadCancellationTokenSource.Cancel();
+        _loadCancellationTokenSource.Dispose();
+      }
+
+      // Créer un nouveau CancellationTokenSource
+      _loadCancellationTokenSource = new CancellationTokenSource();
+      var cancellationToken = _loadCancellationTokenSource.Token;
+
       ReposStatusTextBlock.Text = "Chargement des dépôts...";
       LoadReposButton.IsEnabled = false;
+      CancelLoadButton.IsEnabled = true;
 
       try
       {
@@ -170,21 +193,46 @@ namespace GitHubManager
           return;
         }
 
+        // Récupérer le nombre maximum de repos à charger
+        int? maxRepos = null;
+        if (MaxReposComboBox != null && MaxReposComboBox.SelectedItem != null)
+        {
+          if (MaxReposComboBox.SelectedItem is string selectedText && selectedText == "Tous")
+          {
+            maxRepos = null; // Charger tous
+          }
+          else if (MaxReposComboBox.SelectedItem is int selectedValue)
+          {
+            maxRepos = selectedValue;
+          }
+        }
+
         using (var client = CreateHttpClient())
         {
-          // Charger tous les dépôts en paginant
-          var allRepos = await LoadAllRepositoriesAsync(client);
+          // Charger les dépôts en paginant
+          var allRepos = await LoadAllRepositoriesAsync(client, cancellationToken, maxRepos);
           
-          _allRepositories.Clear();
-          foreach (var repo in allRepos)
+          if (!cancellationToken.IsCancellationRequested)
           {
-            _allRepositories.Add(repo);
-          }
+            _allRepositories.Clear();
+            foreach (var repo in allRepos)
+            {
+              _allRepositories.Add(repo);
+            }
 
-          _currentPage = 1;
-          UpdatePagination();
-          ReposStatusTextBlock.Text = $"{_allRepositories.Count} dépôts chargés.";
+            _currentPage = 1;
+            UpdatePagination();
+            ReposStatusTextBlock.Text = $"{_allRepositories.Count} dépôts chargés.";
+          }
+          else
+          {
+            ReposStatusTextBlock.Text = "Chargement annulé.";
+          }
         }
+      }
+      catch (OperationCanceledException)
+      {
+        ReposStatusTextBlock.Text = "Chargement annulé.";
       }
       catch (Exception ex)
       {
@@ -193,6 +241,12 @@ namespace GitHubManager
       finally
       {
         LoadReposButton.IsEnabled = true;
+        CancelLoadButton.IsEnabled = false;
+        if (_loadCancellationTokenSource != null)
+        {
+          _loadCancellationTokenSource.Dispose();
+          _loadCancellationTokenSource = null;
+        }
       }
     }
 
@@ -301,6 +355,23 @@ namespace GitHubManager
       }
     }
 
+    private void InitializeMaxReposComboBox()
+    {
+      if (MaxReposComboBox != null)
+      {
+        MaxReposComboBox.ItemsSource = new object[] { "Tous", 50, 100, 200, 500 };
+        MaxReposComboBox.SelectedItem = "Tous";
+      }
+    }
+
+    private void CancelLoadButton_Click(object sender, RoutedEventArgs e)
+    {
+      if (_loadCancellationTokenSource != null && !_loadCancellationTokenSource.IsCancellationRequested)
+      {
+        _loadCancellationTokenSource.Cancel();
+      }
+    }
+
     private void ItemsPerPageComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
       if (ItemsPerPageComboBox != null && ItemsPerPageComboBox.SelectedItem is int selectedValue)
@@ -312,7 +383,7 @@ namespace GitHubManager
       }
     }
 
-    private async Task<List<GitHubRepository>> LoadAllRepositoriesAsync(HttpClient client)
+    private async Task<List<GitHubRepository>> LoadAllRepositoriesAsync(HttpClient client, CancellationToken cancellationToken, int? maxRepos = null)
     {
       var allRepos = new List<GitHubRepository>();
       var serializer = new DataContractJsonSerializer(typeof(List<GitHubRepository>));
@@ -320,12 +391,18 @@ namespace GitHubManager
       const int perPage = 100;
       bool hasMorePages = true;
 
-      while (hasMorePages)
+      while (hasMorePages && !cancellationToken.IsCancellationRequested)
       {
+        // Vérifier si on a atteint le nombre maximum de repos
+        if (maxRepos.HasValue && allRepos.Count >= maxRepos.Value)
+        {
+          break;
+        }
+
         ReposStatusTextBlock.Text = $"Chargement des dépôts... (page {page}, {allRepos.Count} déjà chargés)";
 
         var url = $"https://api.github.com/user/repos?per_page={perPage}&page={page}";
-        var response = await client.GetAsync(url);
+        var response = await client.GetAsync(url, cancellationToken);
 
         if (response.IsSuccessStatusCode)
         {
@@ -339,18 +416,34 @@ namespace GitHubManager
             }
             else
             {
-              allRepos.AddRange(repos);
+              // Ajouter seulement le nombre nécessaire si maxRepos est défini
+              if (maxRepos.HasValue)
+              {
+                var remaining = maxRepos.Value - allRepos.Count;
+                if (remaining > 0)
+                {
+                  allRepos.AddRange(repos.Take(remaining));
+                }
+                if (repos.Count > remaining)
+                {
+                  hasMorePages = false;
+                }
+              }
+              else
+              {
+                allRepos.AddRange(repos);
+              }
               
               // Vérifier s'il y a une page suivante via l'en-tête Link
               if (response.Headers.Contains("Link"))
               {
                 var linkHeader = response.Headers.GetValues("Link").FirstOrDefault();
-                hasMorePages = HasNextPage(linkHeader);
+                hasMorePages = HasNextPage(linkHeader) && (!maxRepos.HasValue || allRepos.Count < maxRepos.Value);
               }
               else
               {
                 // Si pas d'en-tête Link, continuer si on a reçu exactement perPage éléments
-                hasMorePages = repos.Count == perPage;
+                hasMorePages = repos.Count == perPage && (!maxRepos.HasValue || allRepos.Count < maxRepos.Value);
               }
 
               page++;
@@ -363,6 +456,7 @@ namespace GitHubManager
         }
       }
 
+      cancellationToken.ThrowIfCancellationRequested();
       return allRepos;
     }
 
