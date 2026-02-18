@@ -284,6 +284,31 @@
                     </Border>
                 </Grid>
             </TabItem>
+            
+            <!-- Onglet Log -->
+            <TabItem x:Name="LogTabItem" Header="Log">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" 
+                                Orientation="Horizontal" 
+                                HorizontalAlignment="Right" 
+                                Margin="0,0,10,5">
+                        <Button x:Name="ClearLogButton" 
+                                Content="Effacer le journal" 
+                                Click="ClearLogButton_Click"
+                                Padding="10,2" 
+                                Margin="0,0,10,0"/>
+                    </StackPanel>
+                    <TextBox x:Name="LogTextBox" 
+                             IsReadOnly="True" 
+                             VerticalScrollBarVisibility="Auto" 
+                             HorizontalScrollBarVisibility="Auto"
+                             TextWrapping="Wrap"
+                             FontFamily="Consolas"
+                             Padding="5"
+                             Background="White"
+                             Foreground="Black"/>
+                </DockPanel>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>

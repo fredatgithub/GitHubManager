@@ -35,16 +35,60 @@ namespace GitHubManager
     // Méthode utilitaire pour afficher des messages de manière conditionnelle
     private void ShowMessage(string message, string title, MessageBoxButton buttons = MessageBoxButton.OK, MessageBoxImage icon = MessageBoxImage.None)
     {
+        // Journaliser le message avec le niveau approprié
+        string logMessage = $"{title}: {message}";
+        if (icon == MessageBoxImage.Error)
+        {
+            LogError(logMessage);
+        }
+        else if (icon == MessageBoxImage.Warning)
+        {
+            LogWarning(logMessage);
+        }
+        else
+        {
+            LogInfo(logMessage);
+        }
+
+        // Afficher la boîte de message si activé
         if (ShowMessages)
         {
             Dispatcher.Invoke(() => MessageBox.Show(this, message, title, buttons, icon));
         }
-        else
-        {
-            // On peut logger le message en mode silencieux si nécessaire
-            //Debug.WriteLine($"[Message supprimé] {title}: {message}");
-        }
     }
+
+    // Méthodes de journalisation
+    private void LogInfo(string message)
+    {
+        LogMessage($"[INFO] {message}");
+    }
+
+    private void LogWarning(string message)
+    {
+        LogMessage($"[WARNING] {message}");
+    }
+
+    private void LogError(string message)
+    {
+        LogMessage($"[ERROR] {message}");
+    }
+
+    private void LogMessage(string message)
+    {
+        if (LogTextBox != null)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                string timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+                LogTextBox.AppendText($"[{timestamp}] {message}{Environment.NewLine}");
+                LogTextBox.ScrollToEnd();
+            });
+        }
+        
+        // Toujours écrire dans la sortie de débogage
+        //Debug.WriteLine(message);
+    }
+
     private bool _hasStoredCredentials = false;
     private CancellationTokenSource _loadCancellationTokenSource;
     private LoadingWindow _currentLoadingWindow;
@@ -81,8 +125,16 @@ namespace GitHubManager
 
     private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
-      WindowSettingsStorage.Save(this);
-      SaveStoredPreferences();
+      try
+      {
+          WindowSettingsStorage.Save(this);
+          SaveStoredPreferences();
+          LogInfo("Application fermée");
+      }
+      catch (Exception ex)
+      {
+          LogError($"Erreur lors de la fermeture de l'application: {ex.Message}");
+      }
     }
 
     private void LoadStoredCredentials()
@@ -599,6 +651,15 @@ namespace GitHubManager
       // L'en-tête Link de GitHub a le format : <url>; rel="next", <url>; rel="last", etc.
       // On cherche la présence de rel="next"
       return linkHeader.Contains("rel=\"next\"");
+    }
+    
+    private void ClearLogButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (LogTextBox != null)
+        {
+            LogTextBox.Clear();
+            LogInfo("Journal effacé");
+        }
     }
 
     private async void CloneButton_Click(object sender, RoutedEventArgs e)
