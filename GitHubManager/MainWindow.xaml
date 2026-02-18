@@ -157,7 +157,11 @@
                                                     Width="Auto" />
                             <DataGridTextColumn Header="URL"
                                                 Binding="{Binding HtmlUrl}"
-                                                Width="3*" />
+                                                Width="2*" />
+                            <DataGridTextColumn Header="Répertoire local"
+                                              Binding="{Binding LocalPath}"
+                                              Width="2*"
+                                              IsReadOnly="True" />
                         </DataGrid.Columns>
                     </DataGrid>
 

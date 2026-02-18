@@ -454,12 +454,13 @@ namespace GitHubManager
       {
         foreach (var repo in _allRepositories)
         {
-          var state = GitOperations.CheckRepositoryState(repo.Name, localPath);
+          var (state, repoPath) = GitOperations.CheckRepositoryState(repo.Name, localPath);
           
           // Mettre à jour sur le thread UI
           Dispatcher.Invoke(() =>
           {
             repo.LocalState = state;
+            repo.LocalPath = repoPath;
           });
         }
       });
@@ -605,10 +606,12 @@ namespace GitHubManager
 
           if (success)
           {
-            // Mettre à jour l'état local du dépôt
+            // Mettre à jour l'état local du dépôt et le chemin
             if (!string.IsNullOrWhiteSpace(localPath))
             {
-              repo.LocalState = GitOperations.CheckRepositoryState(repo.Name, localPath);
+              var (state, path) = GitOperations.CheckRepositoryState(repo.Name, localPath);
+              repo.LocalState = state;
+              repo.LocalPath = path;
             }
 
             MessageBox.Show(

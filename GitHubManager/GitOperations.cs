@@ -104,7 +104,7 @@ namespace GitHubManager
       }
     }
 
-    public static RepositoryLocalState CheckRepositoryState(string repoName, string localPath)
+    public static (RepositoryLocalState State, string Path) CheckRepositoryState(string repoName, string localPath)
     {
       try
       {
@@ -112,7 +112,7 @@ namespace GitHubManager
 
         if (!Directory.Exists(repoPath) || !IsGitRepository(repoPath))
         {
-          return RepositoryLocalState.NotCloned;
+          return (RepositoryLocalState.NotCloned, repoPath);
         }
 
         // Récupérer les informations distantes sans modifier le repo
@@ -131,7 +131,7 @@ namespace GitHubManager
         {
           if (fetchProcess == null)
           {
-            return RepositoryLocalState.NotCloned;
+            return (RepositoryLocalState.NotCloned, repoPath);
           }
 
           fetchProcess.WaitForExit();
@@ -156,7 +156,7 @@ namespace GitHubManager
             {
               if (statusProcess == null)
               {
-                return RepositoryLocalState.UpToDate;
+                return (RepositoryLocalState.UpToDate, repoPath);
               }
 
               statusProcess.WaitForExit();
@@ -165,22 +165,22 @@ namespace GitHubManager
               // Si le status montre "ahead" ou "behind", le repo n'est pas à jour
               if (statusOutput.Contains("ahead") || statusOutput.Contains("behind"))
               {
-                return RepositoryLocalState.NeedsUpdate;
+                return (RepositoryLocalState.NeedsUpdate, repoPath);
               }
 
-              return RepositoryLocalState.UpToDate;
+              return (RepositoryLocalState.UpToDate, repoPath);
             }
           }
           else
           {
             // Il y a des changements à récupérer
-            return RepositoryLocalState.NeedsUpdate;
+            return (RepositoryLocalState.NeedsUpdate, repoPath);
           }
         }
       }
       catch
       {
-        return RepositoryLocalState.NotCloned;
+        return (RepositoryLocalState.NotCloned, Path.Combine(localPath, repoName));
       }
     }
   }
