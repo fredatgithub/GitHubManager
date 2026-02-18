@@ -10,7 +10,13 @@ namespace GitHubManager
       "GitHubManager",
       "preferences.config");
 
+    private static readonly string ShowMessagesFilePath = Path.Combine(
+      Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+      "GitHubManager",
+      "showmessages.config");
+
     private const int DefaultItemsPerPage = 20;
+    private const bool DefaultShowMessages = true;
     private static readonly string LocalPathFilePath = Path.Combine(
       Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
       "GitHubManager",
@@ -63,6 +69,39 @@ namespace GitHubManager
       }
 
       File.WriteAllText(LocalPathFilePath, localPath ?? string.Empty);
+    }
+
+    public static void SaveShowMessages(bool showMessages)
+    {
+      var directory = Path.GetDirectoryName(ShowMessagesFilePath);
+      if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+      {
+        Directory.CreateDirectory(directory);
+      }
+
+      File.WriteAllText(ShowMessagesFilePath, showMessages.ToString());
+    }
+
+    public static bool LoadShowMessages()
+    {
+      if (!File.Exists(ShowMessagesFilePath))
+      {
+        return DefaultShowMessages;
+      }
+
+      try
+      {
+        var content = File.ReadAllText(ShowMessagesFilePath).Trim();
+        if (bool.TryParse(content, out var showMessages))
+        {
+          return showMessages;
+        }
+        return DefaultShowMessages;
+      }
+      catch
+      {
+        return DefaultShowMessages;
+      }
     }
 
     public static string LoadLocalReposPath()

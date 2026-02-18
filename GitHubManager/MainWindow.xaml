@@ -82,7 +82,7 @@
             </TabItem>
 
             <!-- Onglet dépôts -->
-            <TabItem x:Name="ReposTabItem" Header="Dépôts" Height="20" VerticalAlignment="Top">
+            <TabItem x:Name="ReposTabItem" Header="Dépôts">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -104,11 +104,18 @@
                                   Width="100"
                                   VerticalAlignment="Center"
                                   Margin="0,0,10,0" />
-                        <Button x:Name="CancelLoadButton"
-                                Width="100"
-                                Content="Annuler"
-                                Click="CancelLoadButton_Click"
-                                IsEnabled="False" />
+                        <StackPanel Orientation="Horizontal" Margin="5,0,0,0">
+                            <Button x:Name="CancelLoadButton" 
+                                    Content="Annuler le chargement" 
+                                    Click="CancelLoadButton_Click" 
+                                    Padding="10,2"
+                                    Margin="0,0,10,0"
+                                    Visibility="Collapsed"/>
+                            <CheckBox x:Name="ShowMessagesCheckBox" 
+                                      Content="Afficher les messages" 
+                                      IsChecked="True"
+                                      VerticalAlignment="Center"/>
+                        </StackPanel>
                         <TextBlock x:Name="ReposStatusTextBlock"
                                    Margin="15,0,0,0"
                                    VerticalAlignment="Center"

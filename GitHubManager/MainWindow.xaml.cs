@@ -28,6 +28,23 @@ namespace GitHubManager
     private int _itemsPerPage = 20;
     private int _currentPage = 1;
     private int _totalPages = 1;
+    
+    // Propriété pour contrôler l'affichage des messages
+    private bool ShowMessages => ShowMessagesCheckBox?.IsChecked ?? true;
+
+    // Méthode utilitaire pour afficher des messages de manière conditionnelle
+    private void ShowMessage(string message, string title, MessageBoxButton buttons = MessageBoxButton.OK, MessageBoxImage icon = MessageBoxImage.None)
+    {
+        if (ShowMessages)
+        {
+            Dispatcher.Invoke(() => MessageBox.Show(this, message, title, buttons, icon));
+        }
+        else
+        {
+            // On peut logger le message en mode silencieux si nécessaire
+            //Debug.WriteLine($"[Message supprimé] {title}: {message}");
+        }
+    }
     private bool _hasStoredCredentials = false;
     private CancellationTokenSource _loadCancellationTokenSource;
     private LoadingWindow _currentLoadingWindow;
@@ -130,6 +147,11 @@ namespace GitHubManager
             AuthStatusTextBlock.Text = "Veuillez saisir un token personnel GitHub (PAT).";
             AuthStatusTextBlock.Foreground = Brushes.Red;
             TestAuthButton.Background = Brushes.Red;
+            ShowMessage(
+              "Veuillez saisir un token personnel GitHub (PAT).",
+              "Token manquant",
+              MessageBoxButton.OK,
+              MessageBoxImage.Warning);
           }
           return;
         }
@@ -362,6 +384,14 @@ namespace GitHubManager
       {
         LocalReposPathTextBox.Text = localPath;
       }
+      
+      // Charger l'état de la case à cocher ShowMessages
+      if (ShowMessagesCheckBox != null)
+      {
+        ShowMessagesCheckBox.IsChecked = AppPreferencesStorage.LoadShowMessages();
+      }
+      
+      // Le chargement de MaxRepos se fait dans InitializeMaxReposComboBox()
     }
 
     private void SaveStoredPreferences()
@@ -376,6 +406,11 @@ namespace GitHubManager
       if (MaxReposComboBox != null && MaxReposComboBox.SelectedItem != null)
       {
         AppPreferencesStorage.SaveMaxRepos(MaxReposComboBox.SelectedItem);
+      }
+      
+      if (ShowMessagesCheckBox != null)
+      {
+        AppPreferencesStorage.SaveShowMessages(ShowMessagesCheckBox.IsChecked ?? true);
       }
     }
 
@@ -574,7 +609,7 @@ namespace GitHubManager
         
         if (string.IsNullOrWhiteSpace(localPath))
         {
-          MessageBox.Show(
+          ShowMessage(
             "Veuillez d'abord spécifier le chemin local des dépôts dans l'onglet Authentification.",
             "Chemin manquant",
             MessageBoxButton.OK,
@@ -605,7 +640,7 @@ namespace GitHubManager
             // Rafraîchir l'interface utilisateur
             CommandManager.InvalidateRequerySuggested();
 
-            MessageBox.Show(
+            ShowMessage(
               $"Le dépôt '{repo.Name}' a été cloné avec succès.",
               "Succès",
               MessageBoxButton.OK,
@@ -613,7 +648,7 @@ namespace GitHubManager
           }
           else
           {
-            MessageBox.Show(
+            ShowMessage(
               $"Erreur lors du clonage du dépôt '{repo.Name}'. Vérifiez que Git est installé et que le chemin est valide.",
               "Erreur",
               MessageBoxButton.OK,
@@ -622,7 +657,7 @@ namespace GitHubManager
         }
         catch (Exception ex)
         {
-          MessageBox.Show(
+          ShowMessage(
             $"Erreur lors du clonage : {ex.Message}",
             "Erreur",
             MessageBoxButton.OK,
@@ -644,7 +679,7 @@ namespace GitHubManager
         
         if (string.IsNullOrWhiteSpace(localPath))
         {
-          MessageBox.Show(
+          ShowMessage(
             "Veuillez d'abord spécifier le chemin local des dépôts dans l'onglet Authentification.",
             "Chemin manquant",
             MessageBoxButton.OK,
@@ -676,7 +711,7 @@ namespace GitHubManager
             // Rafraîchir l'interface utilisateur
             CommandManager.InvalidateRequerySuggested();
 
-            MessageBox.Show(
+            ShowMessage(
               $"Le dépôt '{repo.Name}' a été mis à jour avec succès.",
               "Succès",
               MessageBoxButton.OK,
@@ -693,7 +728,7 @@ namespace GitHubManager
             });
             CommandManager.InvalidateRequerySuggested();
             
-            MessageBox.Show(
+            ShowMessage(
               $"Erreur lors de la mise à jour du dépôt '{repo.Name}'.",
               "Erreur",
               MessageBoxButton.OK,
@@ -702,7 +737,7 @@ namespace GitHubManager
         }
         catch (Exception ex)
         {
-          MessageBox.Show(
+          ShowMessage(
             $"Erreur lors de la mise à jour : {ex.Message}",
             "Erreur",
             MessageBoxButton.OK,
