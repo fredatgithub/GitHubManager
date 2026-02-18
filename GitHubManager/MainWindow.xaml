@@ -76,7 +76,7 @@
             </TabItem>
 
             <!-- Onglet dépôts -->
-            <TabItem Header="Dépôts">
+            <TabItem Header="Dépôts" Height="20" VerticalAlignment="Top">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
