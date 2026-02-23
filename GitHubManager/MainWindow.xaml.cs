@@ -835,22 +835,31 @@ namespace GitHubManager
         try
         {
           var repoPath = Path.Combine(localPath, repo.Name);
-          var success = await Task.Run(() => GitOperations.UpdateRepositoryAsync(repoPath).Result);
+          var success = await GitOperations.UpdateRepositoryAsync(repoPath);
+          
+          LogInfo($"[UpdateButton] Résultat de la mise à jour pour '{repo.Name}': {success}");
 
           if (success)
           {
             // Mettre à jour l'état du dépôt mis à jour
             var (state, updatedRepoPath) = GitOperations.CheckRepositoryState(repo.Name, localPath);
+            
+            LogInfo($"[UpdateButton] État retourné après mise à jour pour '{repo.Name}': {state}");
 
             // Mettre à jour les propriétés sur le thread UI
             Dispatcher.Invoke(() =>
             {
               repo.LocalState = state;
               repo.LocalPath = updatedRepoPath;
+              LogInfo($"[UpdateButton] État du dépôt mis à jour dans l'UI: {state}");
             });
 
             // Rafraîchir l'interface utilisateur
             CommandManager.InvalidateRequerySuggested();
+            
+            // Forcer la mise à jour du DataGrid pour refléter le nouvel état
+            RepositoriesDataGrid.Items.Refresh();
+            UpdatePagination();
 
             ShowMessage($"Le dépôt '{repo.Name}' a été mis à jour avec succès.", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
           }
