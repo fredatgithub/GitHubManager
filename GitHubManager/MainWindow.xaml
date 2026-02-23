@@ -9,120 +9,120 @@
         mc:Ignorable="d"
         Title="GitHub Manager" Height="450" Width="900"
         WindowStartupLocation="CenterScreen">
-    <Window.Resources>
-        <converters:CloneButtonEnabledConverter x:Key="CloneButtonEnabledConverter" />
-        <converters:UpdateButtonEnabledConverter x:Key="UpdateButtonEnabledConverter" />
-    </Window.Resources>
-    <Grid Margin="10">
-        <TabControl x:Name="MainTabControl">
-            <!-- Onglet authentification -->
-            <TabItem Header="Authentification">
-                <Grid Margin="10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+  <Window.Resources>
+    <converters:CloneButtonEnabledConverter x:Key="CloneButtonEnabledConverter" />
+    <converters:UpdateButtonEnabledConverter x:Key="UpdateButtonEnabledConverter" />
+  </Window.Resources>
+  <Grid Margin="10">
+    <TabControl x:Name="MainTabControl">
+      <!-- Onglet authentification -->
+      <TabItem Header="Authentification">
+        <Grid Margin="10">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0"
+          <TextBlock Grid.Row="0" Grid.Column="0"
                                Margin="0,0,10,10"
                                VerticalAlignment="Center"
                                Text="Nom d'utilisateur GitHub :" />
-                    <TextBox x:Name="UserNameTextBox"
+          <TextBox x:Name="UserNameTextBox"
                              Grid.Row="0" Grid.Column="1"
                              Margin="0,0,0,10"
                              MinWidth="200" />
 
-                    <TextBlock Grid.Row="1" Grid.Column="0"
+          <TextBlock Grid.Row="1" Grid.Column="0"
                                Margin="0,0,10,10"
                                VerticalAlignment="Center"
                                Text="Token personnel (PAT) :" />
-                    <PasswordBox x:Name="TokenPasswordBox"
+          <PasswordBox x:Name="TokenPasswordBox"
                                  Grid.Row="1" Grid.Column="1"
                                  Margin="0,0,0,10"
                                  MinWidth="200" />
 
-                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2"
+          <StackPanel Grid.Row="2" Grid.ColumnSpan="2"
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Left"
                                 Margin="0,0,0,10">
-                        <Button x:Name="TestAuthButton"
+            <Button x:Name="TestAuthButton"
                                 Width="120"
                                 Content="Tester"
                                 Click="TestAuthButton_Click" />
-                        <TextBlock x:Name="AuthStatusTextBlock"
+            <TextBlock x:Name="AuthStatusTextBlock"
                                    Margin="15,0,0,0"
                                    VerticalAlignment="Center"
                                    TextWrapping="Wrap" />
-                    </StackPanel>
+          </StackPanel>
 
-                    <TextBlock Grid.Row="3" Grid.Column="0"
+          <TextBlock Grid.Row="3" Grid.Column="0"
                                Margin="0,0,10,10"
                                VerticalAlignment="Center"
                                Text="Chemin local des repos :" />
-                    <StackPanel Grid.Row="3" Grid.Column="1"
+          <StackPanel Grid.Row="3" Grid.Column="1"
                                 Orientation="Horizontal"
                                 Margin="0,0,0,10">
-                        <TextBox x:Name="LocalReposPathTextBox"
-                                 MinWidth="200"
+            <TextBox x:Name="LocalReposPathTextBox"
+                                 MinWidth="600"
                                  VerticalAlignment="Center"
                                  Margin="0,0,5,0" />
-                        <Button x:Name="BrowseFolderButton"
+            <Button x:Name="BrowseFolderButton"
                                 Content="Parcourir..."
-                                Width="100"
-                                Click="BrowseFolderButton_Click" />
-                    </StackPanel>
-                </Grid>
-            </TabItem>
+                                Width="99"
+                                Click="BrowseFolderButton_Click" Height="18" />
+          </StackPanel>
+        </Grid>
+      </TabItem>
 
-            <!-- Onglet dépôts -->
-            <TabItem x:Name="ReposTabItem" Header="Dépôts">
-                <Grid Margin="10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+      <!-- Onglet dépôts -->
+      <TabItem x:Name="ReposTabItem" Header="Dépôts">
+        <Grid Margin="10">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0"
+          <StackPanel Grid.Row="0"
                                 Orientation="Horizontal"
                                 Margin="0,0,0,10">
-                        <Button x:Name="LoadReposButton"
+            <Button x:Name="LoadReposButton"
                                 Width="150"
                                 Content="Charger les dépôts"
                                 Click="LoadReposButton_Click" />
-                        <TextBlock Text="Nombre de repos :"
+            <TextBlock Text="Nombre de repos :"
                                    VerticalAlignment="Center"
                                    Margin="15,0,5,0" />
-                        <ComboBox x:Name="MaxReposComboBox"
+            <ComboBox x:Name="MaxReposComboBox"
                                   Width="100"
                                   VerticalAlignment="Center"
                                   Margin="0,0,10,0" />
-                        <StackPanel Orientation="Horizontal" Margin="5,0,0,0">
-                            <Button x:Name="CancelLoadButton" 
+            <StackPanel Orientation="Horizontal" Margin="5,0,0,0">
+              <Button x:Name="CancelLoadButton" 
                                     Content="Annuler le chargement" 
                                     Click="CancelLoadButton_Click" 
                                     Padding="10,2"
                                     Margin="0,0,10,0"
                                     Visibility="Collapsed"/>
-                            <CheckBox x:Name="ShowMessagesCheckBox" 
+              <CheckBox x:Name="ShowMessagesCheckBox" 
                                       Content="Afficher les messages" 
                                       IsChecked="True"
                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <TextBlock x:Name="ReposStatusTextBlock"
+            </StackPanel>
+            <TextBlock x:Name="ReposStatusTextBlock"
                                    Margin="15,0,0,0"
                                    VerticalAlignment="Center"
                                    TextWrapping="Wrap" />
-                    </StackPanel>
+          </StackPanel>
 
-                    <DataGrid x:Name="RepositoriesDataGrid"
+          <DataGrid x:Name="RepositoriesDataGrid"
                               Grid.Row="1"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
@@ -130,175 +130,175 @@
                               Margin="0,0,0,10"
                               HeadersVisibility="Column"
                               SelectionMode="Single">
-                        <DataGrid.Columns>
-                            <!-- Colonne Cloner -->
-                            <DataGridTemplateColumn Header="Cloner" Width="Auto">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="Cloner"
+            <DataGrid.Columns>
+              <!-- Colonne Cloner -->
+              <DataGridTemplateColumn Header="Cloner" Width="Auto">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <Button Content="Cloner"
                                                 Click="CloneButton_Click"
                                                 Tag="{Binding}"
                                                 Padding="5,2"
                                                 Margin="2"
                                                 IsEnabled="{Binding LocalState, Converter={StaticResource CloneButtonEnabledConverter}}">
-                                            <Button.Style>
-                                                <Style TargetType="Button">
-                                                    <Setter Property="Background" Value="Transparent" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.UpToDate}">
-                                                            <Setter Property="Background" Value="Green" />
-                                                            <Setter Property="Content" Value="Cloné" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NeedsUpdate}">
-                                                            <Setter Property="Background" Value="Green" />
-                                                            <Setter Property="Content" Value="Cloné" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NotCloned}">
-                                                            <Setter Property="Background" Value="Red" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-                                        </Button>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                      <Button.Style>
+                        <Style TargetType="Button">
+                          <Setter Property="Background" Value="Transparent" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.UpToDate}">
+                              <Setter Property="Background" Value="Green" />
+                              <Setter Property="Content" Value="Cloné" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NeedsUpdate}">
+                              <Setter Property="Background" Value="Green" />
+                              <Setter Property="Content" Value="Cloné" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NotCloned}">
+                              <Setter Property="Background" Value="Red" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </Button.Style>
+                    </Button>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
 
-                            <!-- Colonne Mettre à jour -->
-                            <DataGridTemplateColumn Header="Mettre à jour" Width="Auto">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="Mettre à jour"
+              <!-- Colonne Mettre à jour -->
+              <DataGridTemplateColumn Header="Mettre à jour" Width="Auto">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <Button Content="Mettre à jour"
                                                 Click="UpdateButton_Click"
                                                 Tag="{Binding}"
                                                 Padding="5,2"
                                                 Margin="2"
                                                 IsEnabled="{Binding LocalState, Converter={StaticResource UpdateButtonEnabledConverter}}">
-                                            <Button.Style>
-                                                <Style TargetType="Button">
-                                                    <Setter Property="Background" Value="Transparent" />
-                                                    <Setter Property="Content" Value="Mettre à jour" />
-                                                    <Style.Triggers>
-                                                        <Trigger Property="IsEnabled" Value="False">
-                                                            <Setter Property="Background" Value="LightGray" />
-                                                        </Trigger>
-                                                        <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.UpToDate}">
-                                                            <Setter Property="Background" Value="Green" />
-                                                            <Setter Property="Content" Value="À jour" />
-                                                            <Setter Property="IsEnabled" Value="True" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NeedsUpdate}">
-                                                            <Setter Property="Background" Value="Red" />
-                                                            <Setter Property="Content" Value="Mettre à jour" />
-                                                            <Setter Property="IsEnabled" Value="True" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NotCloned}">
-                                                            <Setter Property="Background" Value="LightGray" />
-                                                            <Setter Property="IsEnabled" Value="False" />
-                                                            <Setter Property="Content" Value="Non cloné" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-                                        </Button>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Nom"
+                      <Button.Style>
+                        <Style TargetType="Button">
+                          <Setter Property="Background" Value="Transparent" />
+                          <Setter Property="Content" Value="Mettre à jour" />
+                          <Style.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                              <Setter Property="Background" Value="LightGray" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.UpToDate}">
+                              <Setter Property="Background" Value="Green" />
+                              <Setter Property="Content" Value="À jour" />
+                              <Setter Property="IsEnabled" Value="True" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NeedsUpdate}">
+                              <Setter Property="Background" Value="Red" />
+                              <Setter Property="Content" Value="Mettre à jour" />
+                              <Setter Property="IsEnabled" Value="True" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding LocalState}" Value="{x:Static local:RepositoryLocalState.NotCloned}">
+                              <Setter Property="Background" Value="LightGray" />
+                              <Setter Property="IsEnabled" Value="False" />
+                              <Setter Property="Content" Value="Non cloné" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </Button.Style>
+                    </Button>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTextColumn Header="Nom"
                                                 Binding="{Binding Name}"
                                                 Width="2*" />
-                            <DataGridTextColumn Header="Description"
+              <DataGridTextColumn Header="Description"
                                                 Binding="{Binding Description}"
                                                 Width="3*" />
-                            <DataGridCheckBoxColumn Header="Privé"
+              <DataGridCheckBoxColumn Header="Privé"
                                                     Binding="{Binding IsPrivate}"
                                                     Width="Auto" />
-                            <DataGridTextColumn Header="URL"
+              <DataGridTextColumn Header="URL"
                                                 Binding="{Binding HtmlUrl}"
                                                 Width="2*" />
-                            <DataGridTextColumn Header="Répertoire local"
+              <DataGridTextColumn Header="Répertoire local"
                                               Binding="{Binding LocalPath}"
                                               Width="2*"
                                               IsReadOnly="True" />
-                        </DataGrid.Columns>
-                    </DataGrid>
+            </DataGrid.Columns>
+          </DataGrid>
 
-                    <!-- Barre de pagination -->
-                    <Border Grid.Row="2"
+          <!-- Barre de pagination -->
+          <Border Grid.Row="2"
                             BorderBrush="LightGray"
                             BorderThickness="0,1,0,0"
                             Padding="5">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            
-                            <StackPanel Grid.Column="0"
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+
+              <StackPanel Grid.Column="0"
                                         Orientation="Horizontal"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center">
-                                <Button x:Name="FirstPageButton"
+                <Button x:Name="FirstPageButton"
                                         Content="⏮ Première"
                                         Width="100"
                                         Margin="0,0,5,0"
                                         Click="FirstPageButton_Click"
                                         IsEnabled="False" />
-                                <Button x:Name="PreviousPageButton"
+                <Button x:Name="PreviousPageButton"
                                         Content="◀ Précédente"
                                         Width="100"
                                         Margin="0,0,5,0"
                                         Click="PreviousPageButton_Click"
                                         IsEnabled="False" />
-                                <TextBlock x:Name="PaginationInfoTextBlock"
+                <TextBlock x:Name="PaginationInfoTextBlock"
                                            VerticalAlignment="Center"
                                            Margin="10,0,10,0"
                                            Text="Page 1 sur 1 (0 dépôts)"
                                            FontWeight="SemiBold" />
-                                <Button x:Name="NextPageButton"
+                <Button x:Name="NextPageButton"
                                         Content="Suivante ▶"
                                         Width="100"
                                         Margin="5,0,5,0"
                                         Click="NextPageButton_Click"
                                         IsEnabled="False" />
-                                <Button x:Name="LastPageButton"
+                <Button x:Name="LastPageButton"
                                         Content="Dernière ⏭"
                                         Width="100"
                                         Margin="5,0,0,0"
                                         Click="LastPageButton_Click"
                                         IsEnabled="False" />
-                            </StackPanel>
-                            
-                            <StackPanel Grid.Column="1"
+              </StackPanel>
+
+              <StackPanel Grid.Column="1"
                                         Orientation="Horizontal"
                                         VerticalAlignment="Center"
                                         Margin="10,0,0,0">
-                                <TextBlock Text="Dépôts par page :"
+                <TextBlock Text="Dépôts par page :"
                                            VerticalAlignment="Center"
                                            Margin="0,0,5,0" />
-                                <ComboBox x:Name="ItemsPerPageComboBox"
+                <ComboBox x:Name="ItemsPerPageComboBox"
                                           Width="80"
                                           SelectionChanged="ItemsPerPageComboBox_SelectionChanged" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                </Grid>
-            </TabItem>
-            
-            <!-- Onglet Log -->
-            <TabItem x:Name="LogTabItem" Header="Log">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" 
+              </StackPanel>
+            </Grid>
+          </Border>
+        </Grid>
+      </TabItem>
+
+      <!-- Onglet Log -->
+      <TabItem x:Name="LogTabItem" Header="Log">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Top" 
                                 Orientation="Horizontal" 
                                 HorizontalAlignment="Right" 
                                 Margin="0,0,10,5">
-                        <Button x:Name="ClearLogButton" 
+            <Button x:Name="ClearLogButton" 
                                 Content="Effacer le journal" 
                                 Click="ClearLogButton_Click"
                                 Padding="10,2" 
                                 Margin="0,0,10,0"/>
-                    </StackPanel>
-                    <TextBox x:Name="LogTextBox" 
+          </StackPanel>
+          <TextBox x:Name="LogTextBox" 
                              IsReadOnly="True" 
                              VerticalScrollBarVisibility="Auto" 
                              HorizontalScrollBarVisibility="Auto"
@@ -307,8 +307,8 @@
                              Padding="5"
                              Background="White"
                              Foreground="Black"/>
-                </DockPanel>
-            </TabItem>
-        </TabControl>
-    </Grid>
+        </DockPanel>
+      </TabItem>
+    </TabControl>
+  </Grid>
 </Window>
