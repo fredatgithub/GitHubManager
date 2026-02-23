@@ -18,7 +18,7 @@ namespace GitHubManager
   /// <summary>
   /// Logique d'interaction pour MainWindow.xaml
   /// </summary>
-  public partial class MainWindow : Window
+  public partial class MainWindow: Window
   {
     private readonly ObservableCollection<GitHubRepository> _allRepositories = new ObservableCollection<GitHubRepository>();
     private readonly ObservableCollection<GitHubRepository> _repositories = new ObservableCollection<GitHubRepository>();
@@ -228,7 +228,7 @@ namespace GitHubManager
         AuthStatusTextBlock.Text = "Test de l'authentification en cours...";
         AuthStatusTextBlock.Foreground = Brushes.Black;
         // Réinitialiser la couleur du bouton
-        TestAuthButton.Background = System.Windows.Media.Brushes.Transparent;
+        TestAuthButton.Background = Brushes.Transparent;
       }
 
       try
@@ -326,6 +326,7 @@ namespace GitHubManager
         {
           Owner = this
         };
+
         _currentLoadingWindow = loadingWindow;
         loadingWindow.Show();
 
@@ -608,7 +609,7 @@ namespace GitHubManager
             }
 
             processed++;
-            if (processed % 10 == 0) // Tous les 10 dépôts
+            if (processed % 10 == 0) // every 10 repos
             {
               LogInfo($"Progression: {processed}/{_allRepositories.Count} dépôts vérifiés");
             }
@@ -851,11 +852,7 @@ namespace GitHubManager
             // Rafraîchir l'interface utilisateur
             CommandManager.InvalidateRequerySuggested();
 
-            ShowMessage(
-              $"Le dépôt '{repo.Name}' a été mis à jour avec succès.",
-              "Succès",
-              MessageBoxButton.OK,
-              MessageBoxImage.Information);
+            ShowMessage($"Le dépôt '{repo.Name}' a été mis à jour avec succès.", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
           }
           else
           {
@@ -864,15 +861,12 @@ namespace GitHubManager
             Dispatcher.Invoke(() =>
             {
               repo.LocalState = currentState;
-              repo.LocalPath = currentRepoPath;
+              repo.LocalPath =
+              currentRepoPath;
             });
-            CommandManager.InvalidateRequerySuggested();
 
-            ShowMessage(
-              $"Erreur lors de la mise à jour du dépôt '{repo.Name}'.",
-              "Erreur",
-              MessageBoxButton.OK,
-              MessageBoxImage.Error);
+            CommandManager.InvalidateRequerySuggested();
+            ShowMessage($"Erreur lors de la mise à jour du dépôt '{repo.Name}'.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
           }
         }
         catch (Exception exception)
